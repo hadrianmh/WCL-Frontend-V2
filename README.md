@@ -15,10 +15,14 @@ and your `docker-compose.yml`
   db:
     .............................
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      ...........................
       MYSQL_DATABASE: apps_v3
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
+      MYSQL_USER: wcl
+      MYSQL_PASSWORD: wcl
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_ROOT_PASSWORD_EXPIRE: 'false'
+      MYSQL_ONETIME_PASSWORD: 'false'
+      MYSQL_INITDB_SKIP_TZINFO: 'true'
 ```
 ### How to run
 ```
