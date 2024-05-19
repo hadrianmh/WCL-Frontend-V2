@@ -3,7 +3,7 @@ version: '3.9'
 services:
   # MySQL Service
   db:
-    image: mysql:8.0
+    image: mariadb:10.11.7
     container_name: mysql
     restart: always
     environment:
@@ -11,11 +11,6 @@ services:
       MYSQL_DATABASE: apps_v3
       MYSQL_USER: wcl
       MYSQL_PASSWORD: wcl
-      MYSQL_ROOT_HOST: '%'
-      MYSQL_ROOT_PASSWORD_EXPIRE: 'false'
-      MYSQL_ONETIME_PASSWORD: 'false'
-      MYSQL_INITDB_SKIP_TZINFO: 'true'
-    command: --default-authentication-plugin=mysql_native_password
     ports:
       - "3306:3306"
     volumes:

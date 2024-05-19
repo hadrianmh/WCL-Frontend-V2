@@ -3,7 +3,7 @@
 /////////////////////////////
 // Personal config DataTables 
 ////////////////////////////
-require '../dashboard/session.php';
+//require '../dashboard/session.php';
 require 'connect.php';
 require 'history.php';
 $Query = 'action';
