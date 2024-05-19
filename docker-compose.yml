@@ -1,0 +1,63 @@
+version: '3.9'
+
+services:
+  # MySQL Service
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: apps
+      MYSQL_USER: apps
+      MYSQL_PASSWORD: apps
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  # PHP Service
+  web:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: php:7.3-fpm-alpine
+    container_name: php
+    restart: always
+    volumes:
+      - ./src:/var/www/html
+      - ./php.ini:/usr/local/etc/php/php.ini
+    ports:
+      - "9000:9000"
+    depends_on:
+      - db
+
+  # Nginx Service
+  nginx:
+    image: nginx:alpine3.19
+    container_name: nginx
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - web
+
+  # phpMyAdmin Service
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root_password
+      UPLOAD_LIMIT: 100000000
+    ports:
+      - "8081:80"
+    depends_on:
+      - db
+
+volumes:
+  db_data:
