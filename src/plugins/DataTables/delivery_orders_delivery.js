@@ -339,6 +339,7 @@ $(document).ready(function(){
 	        	$('#no_delivery').val(output.data[0].no_delivery);
 	        	$('#custom').val(output.data[0].customer);
 	        	$('#shipto').val(output.data[0].shipto);
+				$('#telp').val(output.data[0].telp);
 	        	var no = 0;
 	        	for(var i = 0; i<output.data.length; i++){
 	        		no++;

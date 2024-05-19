@@ -414,13 +414,76 @@ $(document).ready(function(){
 	    request.done(function(output){
 	    	if (output.result == sukses){
 	    		if(output.data[0].unit == 'PCS'){
-	    			var total_unit = output.data[0].total+" ROLL = "+output.data[0].qty_produksi+" PCS";
+	    			var total_unit = output.data[0].total;
+					var lantotal_unit = "=    "+output.data[0].qty_produksi+" PCS";
+					var isiunit = output.data[0].unit+"/ROLL";
 	    			$('#isi').val(output.data[0].isi+" PCS");
 	    		}
 		        if(output.data[0].unit == 'ROLL'){
-		        	var total_unit = output.data[0].qty_produksi+" ROLL = "+output.data[0].total+" PCS";
-		        	$('#isi').val(output.data[0].isi+" PCS");
-
+		        	var total_unit = output.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.data[0].total+" PCS";
+					var isiunit = output.data[0].unit+"/ROLL";
+		        	$('#isi').val(output.data[0].isi+" PCS");		
+		        }
+				if(output.data[0].unit == 'PAK'){
+		        	var total_unit = output.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.data[0].total+" PCS";
+					var isiunit = output.data[0].unit+"/PAK";
+		        	$('#isi').val(output.data[0].isi+" PCS");		
+		        }
+				if(output.data[0].unit == 'CM'){
+		        	var total_unit = output.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.data[0].total+" PCS";
+					var isiunit = output.data[0].unit+"/CM";
+		        	$('#isi').val(output.data[0].isi+" PCS");		
+		        }
+				if(output.data[0].unit == 'MM'){
+		        	var total_unit = output.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.data[0].total+" PCS";
+					var isiunit = output.data[0].unit+"/MM";
+		        	$('#isi').val(output.data[0].isi+" PCS");		
+		        }
+				if(output.data[0].unit == 'METER'){
+		        	var total_unit = output.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.data[0].total+" PCS";
+					var isiunit = output.data[0].unit+"/METER";
+		        	$('#isi').val(output.data[0].isi+" PCS");		
+		        }
+				if(output.data[0].unit == 'DUSH'){
+		        	var total_unit = output.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.data[0].total+" PCS";
+					var isiunit = output.data[0].unit+"/DUS";
+		        	$('#isi').val(output.data[0].isi+" PCS");		
+		        }
+				if(output.data[0].unit == 'BOTOL'){
+		        	var total_unit = output.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.data[0].total+" PCS";
+					var isiunit = output.data[0].unit+"/BOTOL";
+		        	$('#isi').val(output.data[0].isi+" PCS");		
+		        }
+				if(output.data[0].unit == 'UNIT'){
+		        	var total_unit = output.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.data[0].total+" PCS";
+					var isiunit = output.data[0].unit+"/UNIT";
+		        	$('#isi').val(output.data[0].isi+" PCS");		
+		        }
+				if(output.data[0].unit == 'ONS'){
+		        	var total_unit = output.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.data[0].total+" PCS";
+					var isiunit = output.data[0].unit+"/ONS";
+		        	$('#isi').val(output.data[0].isi+" PCS");		
+		        }
+				if(output.data[0].unit == 'KG'){
+		        	var total_unit = output.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.data[0].total+" PCS";
+					var isiunit = output.data[0].unit+"/KG";
+		        	$('#isi').val(output.data[0].isi+" PCS");		
+		        }
+				if(output.data[0].unit == 'LITER'){
+		        	var total_unit = output.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.data[0].total+" PCS";
+					var isiunit = output.data[0].unit+"/LITER";
+		        	$('#isi').val(output.data[0].isi+" PCS");		
 		        }
 	    		$('h2.FormTitle').text('PRATINJAU PRINT');
 	        	$('#form_print .field_container label.error').hide();
@@ -440,6 +503,8 @@ $(document).ready(function(){
 	        	$('#qty_baku').val(output.data[0].qty_baku);
 	        	$('#porporasi').val(output.data[0].porporasi);
 	        	$('#qty_produksi').val(total_unit);
+				$('#qty_produksi2').val(lantotal_unit);
+				$('#unit').text(isiunit);
 	    		$('#myModal2').show();
 	        	hide_loading_message();
 	      	} else {
@@ -488,7 +553,8 @@ $(document).ready(function(){
 	        			$(".lie").text(obj.data[0].line);
 	        			$(".por").text(obj.data[0].porporasi);
 	        			$(".qbaku").text(obj.data[0].qty_baku);
-	        			$(".qproduk").text(obj.data[0].qty_produksi);
+	        			$(".qproduk").text(obj.data[0].qty_produksi + " " + satuanunit.value + " " + qty_produksi2.value);
+						$(".isiuni").text(satuanunit.value);
 	        			$(".is").text(obj.data[0].isi);
 	        			$(".td").text(obj.data[0].ttd);
 

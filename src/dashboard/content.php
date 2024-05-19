@@ -4,7 +4,6 @@ require 'session.php';
 
 if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
-<!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -213,8 +212,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
 
 <?php } elseif(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "company"){ ?>
-
-  <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -346,8 +343,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
   <!-- /.content-wrapper -->
 
 <?php } elseif(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "vendor"){ ?>
-
-  <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -778,7 +773,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group b_kodepos">
                   <label for="b_kodepos">Kode Pos: <span class="required">*</span></label>
-                  <input type="number" min="0" class="form-control" name="b_kodepos" id="b_kodepos" required>
+                  <input class="form-control" name="b_kodepos" id="b_kodepos" required>
                 </div>
 
                 <div class="form-group b_telp">
@@ -1064,7 +1059,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group s_kodepos">
                   <label for="s_kodepos">Kode Pos:</label>
-                  <input type="number" min="0" class="form-control" name="s_kodepos" id="s_kodepos">
+                  <input class="form-control" name="s_kodepos" id="s_kodepos">
                 </div>
 
                 <div class="form-group s_telp">
@@ -1112,7 +1107,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
   <!-- /.content-wrapper -->
 
 <?php } elseif(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "preorder"){ ?>
-<!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -1556,8 +1550,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
   <!-- /.content-wrapper -->
 
 <?php } elseif(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "workorder"){ ?>
-
-<!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -1766,11 +1758,23 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
         
                 <div class="form-group">
                   <label for="qty_produksi">QTY Produksi:</label>
-                  <input type="text" class="form-control" name="qty_produksi" id="qty_produksi" required readonly>
+                  <div style="display:flex; position:relative;">
+                    <input style="width:100px; text-align: center;" type="text" class="form-control" name="qty_produksi" id="qty_produksi" required readonly>  
+                    <select style="width:100px;" name="satuanunit" id="satuanunit" class="form-control" required>
+                    <option value="" selected disabled>Pilih Satuan</option>
+                    <option value="ROLL">ROLL</option>
+                    <option value="PCS">PCS</option>
+                    <option value="UNIT">UNIT</option>
+                    <option value="PAK">PAK</option>
+                    <option value="SHEET">SHEET</option>
+                    <option value="SHEET">METER</option>
+                    </select> 
+                    <input type="text" class="form-control" name="qty_produksi2" id="qty_produksi2" required readonly> 
+                  </div>
                 </div>
         
                 <div class="form-group">
-                  <label for="isi">Isi 1 Roll: <span class="required">*</span></label>
+                  <label for="isi">Isi 1 <label name="unit" id="unit"></label>  <span class="required">*</span></label>
                   <input type="text" class="form-control" name="isi" id="isi" required readonly>
                 </div>
 
@@ -1887,7 +1891,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                       <td></td>
                     </tr>
                     <tr>
-                      <td class='isi'>Isi 1 Roll</td>
+                      <td class='isi'>Isi 1 <span class="isiuni"><span></td>
                       <td colspan="2">: <span class="is"><span></td>
                       <td></td>
                     </tr>
@@ -1981,8 +1985,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
   <!-- /.content-wrapper -->
 
 <?php } elseif(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "invoice_waiting"){ ?>
-
-<!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -2140,8 +2142,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
   <!-- /.content-wrapper -->
 
 <?php } elseif(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "invoice_procces"){ ?>
-
-<!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -2568,8 +2568,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
   <!-- /.content-wrapper -->
 
 <?php } elseif(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "invoice_duedate"){ ?>
-
-<!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -2581,7 +2579,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
         <li class="active"><?php echo ucfirst(htmlspecialchars($_GET["page"])); ?></li>
       </ol>
     </section>
-
     <hr>
 
     <!-- Main content -->
@@ -2968,8 +2965,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
   <!-- /.content-wrapper -->
 
 <?php } elseif(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "invoice_done"){ ?>
-
-<!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -3381,7 +3376,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
   <!-- /.content-wrapper -->
 
 <?php } elseif(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "aging"){ ?>
-<!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -3526,8 +3520,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
   <!-- /.content-wrapper -->
 
 <?php } elseif(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "user"){ ?>
-
-<!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -3663,8 +3655,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
   <!-- /.content-wrapper -->
 
 <?php } elseif(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "profile"){ ?>
-
-<!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -4451,8 +4441,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
 
 <?php } elseif(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "delivery_orders_delivery"){ ?>
-
-<!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -4563,8 +4551,8 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                 </div>
 
                 <div class="form-group shipto">
-                  <label for="phone">Phone:</label>
-                  <input type="text" class="form-control" name="phone" id="phone" required >
+                  <label for="phone">Note:</label>
+                  <input type="text" class="form-control" name="phone" id="telp" required >
                 </div>
 
                 <div class="form-group shipto">
@@ -4593,7 +4581,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                 <script>
                     function tampilkanNilai() {
                         // Ambil nilai dari input
-                        var nilai = document.getElementById("phone").value;
+                        var nilai = document.getElementById("telp").value;
 
                         // Masukkan nilai ke dalam elemen span
                         document.getElementById("nilaiTampil").innerText = nilai;
@@ -4648,7 +4636,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                     <div class="row" style="font-size: 12px">
                       <div class="col-md-9 col-xs-9">
                         <p><strong>Bill To : </strong><span class="bill"></span></p>
-                        <p><strong>Phone : </strong><span id="nilaiTampil" class="phone"></span></p>
                         <p><strong>Ship to : </strong><span class="ship"></span></p>
                       </div>
                       <div class="col-md-3 col-xs-3">
@@ -4684,6 +4671,9 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                     </p>
                     <p class="ttd"></p>
                     <p class="ttd_date"></p>
+                  </div>
+                  <div class="col-md-3 col-xs-3" style="margin-left: -290px;">
+                    <p><strong>Note : </strong><span id="nilaiTampil" class="phone"></span></p>
                   </div>
                   <div class="col-md-3 col-xs-3">
                     <p>
@@ -4731,8 +4721,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
   <!-- /.content-wrapper -->
 
 <?php } elseif(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "delivery_orders_waiting"){ ?>
-
-<!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -5419,7 +5407,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
   <!-- /.content-wrapper -->
 
 <?php } elseif(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "purchase"){ ?>
-<!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -5794,8 +5781,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
   <!-- /.content-wrapper -->
 
 <?php } else { ?>
-
-<!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
@@ -5822,4 +5807,3 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
   </div>
   <!-- /.content-wrapper -->
 <?php } ?>
-

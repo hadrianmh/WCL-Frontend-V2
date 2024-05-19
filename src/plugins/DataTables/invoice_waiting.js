@@ -202,8 +202,8 @@ $(document).ready(function(){
 	}
 
 	function Rupiah(angka){
-		var checked = angka.toString().split('.').join(',');
-		var filter = 'Rp. ' + checked.replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.");
+		var checked = angka.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+		var filter = 'Rp. ' + checked.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 		return filter;
 	}
 

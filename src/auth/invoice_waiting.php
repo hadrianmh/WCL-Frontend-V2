@@ -1,7 +1,7 @@
 <?php
 
 function rupiah($angka){
-  $output = "Rp. ".number_format($angka, 2, ',', '.');
+  $output = "Rp. ".number_format($angka, 2);
   return $output;
 }
 
@@ -96,15 +96,16 @@ if($action != ''){
           $biaya_kirim = '';
         }
 
-        $sj_date = date("d/m/Y", strtotime($row['sj_date']));
+        $sj_date = date("d-m-Y", strtotime($row['sj_date']));
         $ex_no_so = explode("/", $row['no_so']);
         $tagihan = $row['send_qty'] * $row['price'];
+        $tagihanFormatted = number_format($tagihan, 2, '.', ',');
         if($row['ppn'] > 0){
-          $ppn = $tagihan/11;
-          $total = $tagihan + $ppn;
+          $ppn = $tagihanFormatted*11/100;
+          $total = $tagihanFormatted + $ppn;
         } else {
           $ppn = '0';
-          $total = $tagihan;
+          $total = $tagihanFormatted;
         }
 
         if($row['send_qty'] > 0)
@@ -120,7 +121,7 @@ if($action != ''){
             "send_qty"      => $row['send_qty'],
             "unit"          => $row['unit'],
             "price"         => $row['price'],
-            "bill"          => $tagihan,
+            "bill"          => $tagihanFormatted,
             "ppn"           => $ppn,
             "total"         => $total,
             "shipping_costs"=> $biaya_kirim,
@@ -158,15 +159,16 @@ if($action != ''){
           $biaya_kirim = '';
         }
         $data_cost[] = $row['id_fk'].'-'.$row['id_sj'].'-'.$row['cost'];
-        $sj_date = date("d/m/Y", strtotime($row['sj_date']));
+        $sj_date = date("d-m-Y", strtotime($row['sj_date']));
         $ex_no_so = explode("/", $row['no_so']);
         $tagihan = $row['send_qty'] * $row['price'];
+        $tagihanFormatted = number_format($tagihan, 2, '.', ',');
         if($row['ppn'] > 0){
-          $ppn = $tagihan/11;
-          $total = $tagihan + $ppn;
+          $ppn = $tagihanFormatted*11/100;
+          $total = $tagihanFormatted + $ppn;
         } else {
           $ppn = '0';
-          $total = $tagihan;
+          $total = $tagihanFormatted;
         }
 
         if($row['send_qty'] > 0)
@@ -181,7 +183,7 @@ if($action != ''){
             "send_qty"      => $row['send_qty'],
             "unit"          => $row['unit'],
             "price"         => $row['price'],
-            "bill"          => $tagihan,
+            "bill"          => $tagihanFormatted,
             "ppn"           => $ppn,
             "total"         => $total,
             "shipping_costs"=> $biaya_kirim

@@ -526,6 +526,16 @@ if($action != ''){
 					if(empty($data['annotation'][$key])){$annotation = '';} else {$annotation = $data['annotation'][$key];}
 					if($unit === "PCS"){$total = $qty/$volume;}
 					if($unit === "ROLL"){$total = $qty*$volume;}
+					if($unit === "PAK"){$total = $qty*$volume;}
+					if($unit === "CM"){$total = $qty*$volume;}
+					if($unit === "MM"){$total = $qty*$volume;}
+					if($unit === "METER"){$total = $qty*$volume;}
+					if($unit === "DUSH"){$total = $qty*$volume;}
+					if($unit === "BOTOL"){$total = $qty*$volume;}
+					if($unit === "UNIT"){$total = $qty*$volume;}
+					if($unit === "ONS"){$total = $qty*$volume;}
+					if($unit === "KG"){$total = $qty*$volume;}
+					if($unit === "LITER"){$total = $qty*$volume;}
 					if(empty($data['porporasi'][$key]))	{$porporasi = '0';} else {$porporasi = $data['porporasi'][$key];}
 					if(!empty($data['sources'][$key]) AND $data['sources'][$key] == '1'){
 						$sources = $data['sources'][$key];
@@ -622,6 +632,16 @@ if($action != ''){
 					if(empty($data['annotation'][$key])){$annotation = '';} else {$annotation = $data['annotation'][$key];}
 					if($unit === "PCS"){$total = $qty/$volume;}
 					if($unit === "ROLL"){$total = $qty*$volume;}
+					if($unit === "PAK"){$total = $qty*$volume;}
+					if($unit === "CM"){$total = $qty*$volume;}
+					if($unit === "MM"){$total = $qty*$volume;}
+					if($unit === "METER"){$total = $qty*$volume;}
+					if($unit === "DUSH"){$total = $qty*$volume;}
+					if($unit === "BOTOL"){$total = $qty*$volume;}
+					if($unit === "UNIT"){$total = $qty*$volume;}
+					if($unit === "ONS"){$total = $qty*$volume;}
+					if($unit === "KG"){$total = $qty*$volume;}
+					if($unit === "LITER"){$total = $qty*$volume;}
 					if(empty($data['porporasi'][$key]))	{$porporasi = '0';} else {$porporasi = $data['porporasi'][$key];}
 					if(!empty($data['sources'][$key]) AND $data['sources'][$key] == '1'){
 						$sources = $data['sources'][$key];
@@ -847,6 +867,16 @@ if($action != ''){
 	    	if (isset($_GET['volume'])) { $update2 .= "volume   = '" . $volume ."',";}
 	    	if ($unit == "PCS")			{ $update2 .= "total 	= '" . $qty/$volume ."',";}
 	    	if ($unit == "ROLL")		{ $update2 .= "total 	= '" . $qty*$volume ."',";}
+			if ($unit == "PAK")			{ $update2 .= "total 	= '" . $qty*$volume ."',";}
+			if ($unit == "CM")			{ $update2 .= "total 	= '" . $qty*$volume ."',";}
+			if ($unit == "MM")			{ $update2 .= "total 	= '" . $qty*$volume ."',";}
+			if ($unit == "METER")		{ $update2 .= "total 	= '" . $qty*$volume ."',";}
+			if ($unit == "DUSH")		{ $update2 .= "total 	= '" . $qty*$volume ."',";}
+			if ($unit == "BOTOL")		{ $update2 .= "total 	= '" . $qty*$volume ."',";}
+			if ($unit == "UNIT")		{ $update2 .= "total 	= '" . $qty*$volume ."',";}
+			if ($unit == "ONS")			{ $update2 .= "total 	= '" . $qty*$volume ."',";}
+			if ($unit == "KG")			{ $update2 .= "total 	= '" . $qty*$volume ."',";}
+			if ($unit == "LITER")		{ $update2 .= "total 	= '" . $qty*$volume ."',";}
 	    	if (isset($_GET['uk_bahan_baku'])) { $update2 .= "uk_bahan_baku   	= '" . mysqli_real_escape_string($connect, $_GET['uk_bahan_baku'])	."',";}
 	    	if (isset($_GET['qty_bahan_baku'])){ $update2 .= "qty_bahan_baku   = '" . mysqli_real_escape_string($connect, $_GET['qty_bahan_baku'])	."',";}
 	    	if (isset($_GET['qore'])) 	{ $update2 .= "qore   	= '" . mysqli_real_escape_string($connect, $_GET['qore'])	."',";}

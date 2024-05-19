@@ -4,11 +4,10 @@ if(!empty($_POST['email']) AND !empty($_POST['password']) AND !empty($_POST['cod
 
 	session_start();
 
-	// if($_SESSION['digit'] == $_POST['code']){
+	if($_SESSION['digit'] == $_POST['code']){
 
 		require 'connect.php';
 		include 'history.php';
-  var_dump($_POST);
 
 		$email = mysqli_real_escape_string($connect, $_POST['email']);
 		$pass = mysqli_real_escape_string($connect, md5($_POST['password']));
@@ -66,9 +65,9 @@ if(!empty($_POST['email']) AND !empty($_POST['password']) AND !empty($_POST['cod
 			echo "<div class='alert alert-danger'>Email isn't registered.</div>";
 		}
 	
-	// } else {
-	// 	echo "<div class='alert alert-danger'>Wrong security code.</div>";
-	// }
+	} else {
+		echo "<div class='alert alert-danger'>Wrong security code.</div>";
+	}
 
 } else {
 	echo "<div class='alert alert-danger'>Not allowed.</div>";

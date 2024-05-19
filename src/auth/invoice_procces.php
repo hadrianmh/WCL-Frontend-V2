@@ -1,7 +1,7 @@
 <?php
 
 function rupiah($angka){
-  $output = "Rp. ".number_format($angka, 2, ',', '.');
+  $output = "Rp. ".number_format($angka, 2);
   return $output;
 }
 
@@ -90,6 +90,7 @@ if($action != ''){
         $ex_no_so = explode("/", $row['no_so']);
         $duration = date("d/m/Y", strtotime($row['duration']));
         $tagihan = $row['send_qty'] * $row['price'];
+        $tagihanFormatted = number_format($tagihan, 2, '.', ',');
 
         $functions  = '<div class="function_buttons"><ul>';
         if($_SESSION['role'] != '5'){
@@ -104,11 +105,14 @@ if($action != ''){
         $functions .= '</ul></div>';
 
         if($row['ppn'] > 0){
-          $ppn = $tagihan/11;
+          $ppn = $tagihan*11/100;
+          $ppnFormatted = number_format($ppn, 2, '.', ',');
           $total = $tagihan + $ppn;
+          $totalFormatted = number_format($total, 2, '.', ',');
         } else {
-          $ppn = '0';
+          $ppnFormatted = '0';
           $total = $tagihan;
+          $totalFormatted = number_format($total, 2, '.', ',');
         }
 
         if($row['send_qty'] > 0)
@@ -141,9 +145,9 @@ if($action != ''){
             "ekspedisi"     => $row['ekspedisi'],
             "uom"           => $row['uom'],
             "jml"           => $row['jml'],
-            "bill"          => $tagihan,
-            "ppn"           => $ppn,
-            "total"         => $total,
+            "bill"          => $tagihanFormatted,
+            "ppn"           => $ppnFormatted,
+            "total"         => $totalFormatted,
             "shipping_costs"=> $biaya_kirim,
             "dicetak"       => $print,
             "diinput"       => $name,
@@ -182,13 +186,16 @@ if($action != ''){
         $ex_no_so = explode("/", $row['no_so']);
         $duration = date("d/m/Y", strtotime($row['duration']));
         $tagihan = $row['send_qty'] * $row['price'];
+        $tagihanFormatted = number_format($tagihan, 2, '.', ',');
         
         if($row['ppn'] > 0){
-          $ppn = $tagihan/11;
+          $ppn = $tagihan*11/100;
+          $ppnFormatted = number_format($tagihan, 2, '.', ',');
           $total = $tagihan + $ppn;
+          $totalFormatted = number_format($tagihan, 2, '.', ',');
         } else {
-          $ppn = '0';
-          $total = $tagihan;
+          $ppnFormatted = '0';
+          $totalFormatted = $tagihan;
         }
         
         if($row['send_qty'] > 0)
@@ -221,9 +228,9 @@ if($action != ''){
             "ekspedisi"     => $row['ekspedisi'],
             "uom"           => $row['uom'],
             "jml"           => $row['jml'],
-            "bill"          => $tagihan,
-            "ppn"           => $ppn,
-            "total"         => $total,
+            "bill"          => $tagihanFormatted,
+            "ppn"           => $ppnFormatted,
+            "total"         => $totalFormatted,
             "shipping_costs"=> $biaya_kirim,
             "dicetak"       => $print,
             "diinput"       => $name,
@@ -263,6 +270,7 @@ if($action != ''){
         $ex_no_so = explode("/", $row['no_so']);
         $duration = date("d/m/Y", strtotime($row['duration']));
         $tagihan = $row['send_qty'] * $row['price'];
+        $tagihanFormatted = number_format($tagihan, 2, '.', ',');
 
         $functions  = '<div class="function_buttons"><ul>';
         if($_SESSION['role'] != '5'){
@@ -277,11 +285,14 @@ if($action != ''){
         $functions .= '</ul></div>';
 
         if($row['ppn'] > 0){
-          $ppn = $tagihan/11;
+          $ppn = $tagihan*11/100;
+          $ppnFormatted = number_format($ppn, 2, '.', ',');
           $total = $tagihan + $ppn;
+          $totalFormatted = number_format($total, 2, '.', ',');
         } else {
-          $ppn = '0';
-          $total = $tagihan;
+          $ppnFormatted = '0';
+          $total = $tagihan + $ppn;
+          $totalFormatted = number_format($total, 2, '.', ',');
         }
 
         if($row['send_qty'] > 0)
@@ -314,9 +325,9 @@ if($action != ''){
             "ekspedisi"     => $row['ekspedisi'],
             "uom"           => $row['uom'],
             "jml"           => $row['jml'],
-            "bill"          => $tagihan,
-            "ppn"           => $ppn,
-            "total"         => $total,
+            "bill"          => $tagihanFormatted,
+            "ppn"           => $ppnFormatted,
+            "total"         => $totalFormatted,
             "shipping_costs"=> $biaya_kirim,
             "dicetak"       => $print,
             "diinput"       => $name,
@@ -354,7 +365,7 @@ if($action != ''){
         while($row = $sql2->fetch_array()){
           $tagihan = $row['send_qty'] * $row['price'];
           $no_so = explode("/", $row['no_so']);
-          if($row['ppn'] > 0){ $ppn = $tagihan/11; $total = $tagihan + $ppn; } else { $ppn = 0; $total = $tagihan; }
+          if($row['ppn'] > 0){ $ppn = $tagihan*11/100; $total = $tagihan + $ppn; } else { $ppn = 0; $total = $tagihan; }
           if(!in_array($row['id_fk'].'-'.$row['id_sj'].'-'.$row['cost'], $data_cost)){
             $biaya_kirim = $row['cost'];
           } else {
@@ -472,7 +483,7 @@ if($action != ''){
         $unit     = $data['unit'][$key];
         $price    = $data['price'][$key];
 
-        if($status_ppn > 0){ $ppn = $price / 11; } else { $ppn = 0; }
+        if($status_ppn > 0){ $ppn = $price * 11 / 100; } else { $ppn = 0; }
         if(strtolower($no_sj) === $no_delivery){ $suratjalan = ''; } else { $suratjalan = $no_sj; }
 
         $mysqli_data[] = array(

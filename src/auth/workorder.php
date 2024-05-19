@@ -503,11 +503,107 @@ if($action != ''){
                 $isi = $row['volume'];
                 $total = $qty * $isi;
               }
-            } else {
-              $qty = $row['qty'];
-              $isi = $row['volume'];
-              $total = $row['total'];
-            }
+            } else if($row['unit'] == 'PAK'){
+              if($ex_sources[1] >= $row['qty']){
+                $qty = 0;
+                $total = 0;
+                $isi = 0;
+              } else {
+                $qty = $row['qty'] - $ex_sources[1];
+                $isi = $row['volume'];
+                $total = $qty * $isi;
+              }
+            } else if($row['unit'] == 'CM'){
+              if($ex_sources[1] >= $row['qty']){
+                $qty = 0;
+                $total = 0;
+                $isi = 0;
+              } else {
+                $qty = $row['qty'] - $ex_sources[1];
+                $isi = $row['volume'];
+                $total = $qty * $isi;
+              }
+            }  else if($row['unit'] == 'MM'){
+              if($ex_sources[1] >= $row['qty']){
+                $qty = 0;
+                $total = 0;
+                $isi = 0;
+              } else {
+                $qty = $row['qty'] - $ex_sources[1];
+                $isi = $row['volume'];
+                $total = $qty * $isi;
+              }
+            }  else if($row['unit'] == 'METER'){
+              if($ex_sources[1] >= $row['qty']){
+                $qty = 0;
+                $total = 0;
+                $isi = 0;
+              } else {
+                $qty = $row['qty'] - $ex_sources[1];
+                $isi = $row['volume'];
+                $total = $qty * $isi;
+              }
+            }  else if($row['unit'] == 'DUSH'){
+              if($ex_sources[1] >= $row['qty']){
+                $qty = 0;
+                $total = 0;
+                $isi = 0;
+              } else {
+                $qty = $row['qty'] - $ex_sources[1];
+                $isi = $row['volume'];
+                $total = $qty * $isi;
+              }
+            }  else if($row['unit'] == 'BOTOL'){
+              if($ex_sources[1] >= $row['qty']){
+                $qty = 0;
+                $total = 0;
+                $isi = 0;
+              } else {
+                $qty = $row['qty'] - $ex_sources[1];
+                $isi = $row['volume'];
+                $total = $qty * $isi;
+              }
+            }  else if($row['unit'] == 'UNIT'){
+              if($ex_sources[1] >= $row['qty']){
+                $qty = 0;
+                $total = 0;
+                $isi = 0;
+              } else {
+                $qty = $row['qty'] - $ex_sources[1];
+                $isi = $row['volume'];
+                $total = $qty * $isi;
+              }
+            }  else if($row['unit'] == 'ONS'){
+              if($ex_sources[1] >= $row['qty']){
+                $qty = 0;
+                $total = 0;
+                $isi = 0;
+              } else {
+                $qty = $row['qty'] - $ex_sources[1];
+                $isi = $row['volume'];
+                $total = $qty * $isi;
+              }
+            }  else if($row['unit'] == 'KG'){
+              if($ex_sources[1] >= $row['qty']){
+                $qty = 0;
+                $total = 0;
+                $isi = 0;
+              } else {
+                $qty = $row['qty'] - $ex_sources[1];
+                $isi = $row['volume'];
+                $total = $qty * $isi;
+              }
+            }  else if($row['unit'] == 'LITER'){
+              if($ex_sources[1] >= $row['qty']){
+                $qty = 0;
+                $total = 0;
+                $isi = 0;
+              } else {
+                $qty = $row['qty'] - $ex_sources[1];
+                $isi = $row['volume'];
+                $total = $qty * $isi;
+              }
+            }   
             
           } else {
             $qty = $row['qty'];

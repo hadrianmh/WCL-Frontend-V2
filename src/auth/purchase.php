@@ -142,7 +142,7 @@ if($action != ''){
 		    		$subtotal = $row['qty'] * $row['price_1'];
 		    	}
 
-		    	if($row['ppn'] > 0){ $tax = $subtotal/10; } else { $tax = 0; }
+		    	if($row['ppn'] > 0){ $tax = $subtotal*11/100; } else { $tax = 0; }
 		    	$total = $subtotal + $tax;
 
 		        $mysqli_data[] = array(
@@ -201,7 +201,7 @@ if($action != ''){
 		    		$subtotal = $row['qty'] * $row['price_1'];
 		    	}
 
-		    	if($row['ppn'] > 0){ $tax = $subtotal/10; } else { $tax = 0; }
+		    	if($row['ppn'] > 0){ $tax = $subtotal*11/100; } else { $tax = 0; }
 		    	$total = $subtotal + $tax;
 
 		        $mysqli_data[] = array(
@@ -272,7 +272,7 @@ if($action != ''){
 		    		$subtotal = $row['qty'] * $row['price_1'];
 		    	}
 
-		    	if($row['ppn'] > 0){ $tax = $subtotal/10; } else { $tax = 0; }
+		    	if($row['ppn'] > 0){ $tax = $subtotal*11/100; } else { $tax = 0; }
 		    	$total = $subtotal + $tax;
 
 		        $mysqli_data[] = array(
@@ -663,7 +663,7 @@ if($action != ''){
   					$subtotal = $row['price_1']*$row['qty'];
   				}
 
-  				if($row['ppn'] > 0){ $tax = $subtotal/10; } else { $tax = 0; }
+  				if($row['ppn'] > 0){ $tax = $subtotal*11/100; } else { $tax = 0; }
   				$total = $subtotal + $tax;
   				$obj = json_decode($row['value']);
 

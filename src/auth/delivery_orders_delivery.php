@@ -253,6 +253,10 @@ if($action != ''){
       } else {
         $result  = $success;
         $message = $qsuccess;
+
+        $select1 = "SELECT b.telp FROM workorder_customer AS a JOIN customer AS b WHERE a.customer = b.nama AND a.id_fk = '$id_fk'";
+        $sqlTelp = $connect->query($select1);
+
         while($row = $sql1->fetch_array()){
           if($row['send_qty'] > 0)
           {
@@ -267,6 +271,8 @@ if($action != ''){
               "unit"        => $row['unit']
             );
           }
+
+          
         }
       }
     }
