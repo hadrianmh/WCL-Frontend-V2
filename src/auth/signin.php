@@ -1,6 +1,6 @@
 <?php
 
-if(!empty($_POST['email']) AND !empty($_POST['password']) AND !empty($_POST['code'])){
+// if(!empty($_POST['email']) AND !empty($_POST['password']) AND !empty($_POST['code'])){
 
 	session_start();
 
@@ -65,9 +65,9 @@ if(!empty($_POST['email']) AND !empty($_POST['password']) AND !empty($_POST['cod
 			echo "<div class='alert alert-danger'>Email isn't registered.</div>";
 		}
 	
-	} else {
-		echo "<div class='alert alert-danger'>Wrong security code.</div>";
-	}
+	// } else {
+	// 	echo "<div class='alert alert-danger'>Wrong security code.</div>";
+	// }
 
 } else {
 	echo "<div class='alert alert-danger'>Not allowed.</div>";
