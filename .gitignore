@@ -1,2 +1,5 @@
 # access and error logs
-logs/*
+logs/
+
+# local assets
+assets/
