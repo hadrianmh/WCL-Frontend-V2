@@ -2,7 +2,7 @@
 error_reporting(0);
 date_default_timezone_set("Asia/jakarta");
 
-$host = 'host.docker.internal';
+$host = 'localhsot';
 $user = 'root';
 $pass = 'root';
 $dbase = 'apps_v3';

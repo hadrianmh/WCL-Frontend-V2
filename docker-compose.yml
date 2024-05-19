@@ -53,7 +53,7 @@ services:
     restart: always
     environment:
       PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_ROOT_PASSWORD: root
       UPLOAD_LIMIT: 100000000
     ports:
       - "8081:80"
