@@ -8,7 +8,7 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: apps
+      MYSQL_DATABASE: apps_v3
       MYSQL_USER: apps
       MYSQL_PASSWORD: apps
     ports:
@@ -42,6 +42,7 @@ services:
     volumes:
       - ./src:/var/www/html
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./logs:/var/log/nginx
     depends_on:
       - web
 

@@ -2,9 +2,9 @@
 error_reporting(0);
 date_default_timezone_set("Asia/jakarta");
 
-$host = 'localhost';
+$host = 'host.docker.internal';
 $user = 'root';
-$pass = '';
+$pass = 'root';
 $dbase = 'apps_v3';
 
 $connect = new mysqli($host,$user,$pass,$dbase);
