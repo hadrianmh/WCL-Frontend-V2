@@ -1,12 +1,22 @@
-# WCL Production V1
+# WCL Frontend V2
 
 ### Configuration
-Setup your connection database on `src/auth/connect.php`
+Define `$this->host`, `$this->port`, and `$this->endpoint` Rest API WCL v2 on `src/utils/api.php`
 ```
-$host = 'host.docker.internal';
-$user = 'root';
-$pass = 'root';
-$dbase = 'apps_v3';
+public function __construct($credential = null) {
+    $this->host     = "host.docker.internal";
+    $this->port     = "8082";
+    $this->endpoint = "/api/v1";
+    ......
+}
+```
+Define JWT secret key on `$key` on `src/utils/jwt.php`
+```
+function decode_jwt($jwt) {
+    try {
+		$key = "33b9b3de94a42d19f47df7021954eaa8";
+        $decoded = JWT::decode($jwt, new Key($key, 'HS256'));
+       .......
 ```
 and your `docker-compose.yml`
 
