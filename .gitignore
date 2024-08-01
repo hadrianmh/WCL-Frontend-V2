@@ -1,8 +1,8 @@
 # access and error logs
-logs/*
+logs/
 
 # local assets
-assets/*
+assets/
 
 # Ignore all files with a .log extension
 *.log

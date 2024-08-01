@@ -1,7 +1,9 @@
 # WCL Frontend V2
 
 ### Configuration
-Define `$this->host`, `$this->port`, and `$this->endpoint` Rest API WCL v2 on `src/utils/api.php`
+Define `$this->host`, `$this->port`, and `$this->endpoint` Rest API WCL v2 [[read more](https://github.com/hadrianmh/WCL-Beckend-V2)]
+
+on `src/utils/api.php`
 ```
 public function __construct($credential = null) {
     $this->host     = "host.docker.internal";
