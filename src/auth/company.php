@@ -115,7 +115,7 @@ if($action != ''){
               $logger = logger($connect,'Add Company', 'Company: '.$company.' - Address: '.$address.' - Phone: '.$phone);
               if(!$sql OR !$logger){
                 $result  = $error;
-                $message = 'Gagal memasukan data';
+                $message = 'Gagal memasukan data '.$query;
 
               } else {
                 $result  = $success;

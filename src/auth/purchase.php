@@ -126,7 +126,7 @@ if($action != ''){
 		    	$po_date = date("d/m/Y", strtotime($date));
 
 		     	$functions = "<div class='function_buttons'><ul>";
-		     	if($_SESSION['id'] == $row['input_by']){
+		     	if($row['input_by'] == '2'){
 		     		$functions .= "<li class='function_edit-customer UbahVendor'><a data-id='".$row['id_po']."' title='Ubah Vendor'><span>Ubah Vendor</span></a></li>";
 		     		$functions .= "<li class='function_edit-item UbahItem'><a data-id='".$row['id_po_item']."' title='Ubah Item'><span>Ubah Item</span></a></li>";
 		     		$functions .= '<li class="function_print PrintView"><a data-id="'.$row['id_po'].'" title="Print View"><span>Print</span></a></li>';

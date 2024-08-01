@@ -1,4 +1,3 @@
-<?php require 'session.php'; ?>
   <footer class="main-footer">
     <div class="pull-right hidden-xs">
      <strong> <p>The re-released</strong> version </p>

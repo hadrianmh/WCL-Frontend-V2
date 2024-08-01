@@ -1006,6 +1006,18 @@ if($action != ''){
 
     		$logger = logger($connect,'Delete PO (item)', 'Customer: '.$fetch2['customer'].' - No po: '.$fetch2['po_customer'].' - Po date: '.$fetch2['po_date']);
 
+						$tabel1 = 'preorder_customer';
+			$tabel2 = 'preorder_item';
+			$tabel3 = 'preorder_price';
+			$tabel4 = 'workorder_customer';
+			$tabel5 = 'workorder_item';
+			$tabel6 = 'delivery_orders_customer';
+			$tabel7 = 'delivery_orders_item';
+			$tabel8 = 'delivery_orders_status';
+			$tabel9 = 'invoice';
+			$tabel10 = 'status';
+			$tabel11 = 'customer';
+
     		//menghapus DO customer, DO item dan invoice berdasarkan kondisi
     		foreach($data2 as $keys => $values){
 		        $trigger2 = $data2[$keys]['jml_item_dlm_tiap_sj'];

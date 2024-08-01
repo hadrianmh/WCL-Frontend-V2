@@ -1,19 +1,3 @@
-<?php
-require '../auth/connect.php';
-require 'session.php';
-
-$session_name = $_SESSION['name'];
-$session_email = $_SESSION['email'];
-$session_role = $_SESSION['role'];
-$session_status = $_SESSION['status'];
-$session_account = $_SESSION['account'];
-
-$query = "SELECT * FROM user WHERE email='$session_email' AND name='$session_name' AND status='$session_status' AND role='$session_role' AND account='$session_account'";
-$sql = $connect->query($query);
-if($sql->num_rows > 0){
-  $data = $sql->fetch_array();
-?>
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -21,17 +5,17 @@ if($sql->num_rows > 0){
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>
   <?php
-  if($data['role'] == '1'){
+  if($_SESSION['role'] == '1'){
     echo "Root";
-  } else if($data['role'] == '2'){
+  } else if($_SESSION['role'] == '2'){
     echo "Admin";
-  } elseif ($data['role'] == '3') {
+  } elseif ($_SESSION['role'] == '3') {
     echo "Sales Order";
-  } elseif ($data['role'] == '4') {
+  } elseif ($_SESSION['role'] == '4') {
     echo "Finance";
-  } elseif ($data['role'] == '5') {
+  } elseif ($_SESSION['role'] == '5') {
     echo "Guest";
-  } elseif ($data['role'] == '6') {
+  } elseif ($_SESSION['role'] == '6') {
     echo "Production";
   }
   ?>
@@ -66,9 +50,3 @@ if($sql->num_rows > 0){
     });
   </script>
 </head>
-<?php } else {
-  session_destroy();
-  header("Location:../signin.php");
-  exit;
-}
-?>

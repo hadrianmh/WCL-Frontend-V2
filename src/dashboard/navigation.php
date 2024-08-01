@@ -1,18 +1,3 @@
-<?php
-require '../auth/connect.php';
-require 'session.php';
-
-$session_name = $_SESSION['name'];
-$session_email = $_SESSION['email'];
-$session_role = $_SESSION['role'];
-$session_status = $_SESSION['status'];
-$session_account = $_SESSION['account'];
-
-$query = "SELECT * FROM user WHERE email='$session_email' AND name='$session_name' AND status='$session_status' AND role='$session_role' AND account='$session_account'";
-$sql = $connect->query($query);
-if($sql->num_rows > 0){
-  $data = $sql->fetch_array();
-?>
 <body class="hold-transition skin-blue sidebar-mini">
 <div class="wrapper">
   <header class="main-header">
@@ -21,22 +6,22 @@ if($sql->num_rows > 0){
       <!-- mini logo for sidebar mini 50x50 pixels -->
       <span class="logo-mini"><b>
         <?php
-        if($data['role'] == '1'){
+        if($_SESSION['role'] == '1'){
           $text = "Root";
           echo substr($text, 0, 1);
-        } else if($data['role'] == '2'){
+        } else if($_SESSION['role'] == '2'){
           $text = "Admin";
           echo substr($text, 0, 1);
-        } elseif ($data['role'] == '3') {
+        } elseif ($_SESSION['role'] == '3') {
           $text = "Sales Order";
           echo substr($text, 0, 1);
-        } elseif ($data['role'] == '4') {
+        } elseif ($_SESSION['role'] == '4') {
           $text = "Finance";
           echo substr($text, 0, 1);
-        } elseif ($data['role'] == '5') {
+        } elseif ($_SESSION['role'] == '5') {
           $text = "Guest";
           echo substr($text, 0, 1);
-        } elseif ($data['role'] == '6') {
+        } elseif ($_SESSION['role'] == '6') {
           $text = "Production";
           echo substr($text, 0, 1);
         }
@@ -45,17 +30,17 @@ if($sql->num_rows > 0){
       <!-- logo for regular state and mobile devices -->
       <span class="logo-lg"><b>
         <?php
-        if($data['role'] == '1'){
+        if($_SESSION['role'] == '1'){
           echo "Root";
-        } else if($data['role'] == '2'){
+        } else if($_SESSION['role'] == '2'){
           echo "Admin";
-        } elseif ($data['role'] == '3') {
+        } elseif ($_SESSION['role'] == '3') {
           echo "Sales Order";
-        } elseif ($data['role'] == '4') {
+        } elseif ($_SESSION['role'] == '4') {
           echo "Finance";
-        } elseif ($data['role'] == '5') {
+        } elseif ($_SESSION['role'] == '5') {
           echo "Guest";
-        } elseif ($data['role'] == '6') {
+        } elseif ($_SESSION['role'] == '6') {
           echo "Finance";
         } 
         ?>
@@ -88,34 +73,34 @@ if($sql->num_rows > 0){
           <li class="dropdown user user-menu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
               <?php
-              if(empty($data['picture'])){ ?>
+              if(empty($_SESSION['picture'])){ ?>
               <img src="../files/img/default-avatar.jpg" class="user-image" alt="User Image">
               <?php } else { ?>
-              <img src="../files/uploads/<?php echo $data['picture']; ?>" class="user-image" alt="User Image">
+              <img src="../files/uploads/<?php echo $_SESSION['picture']; ?>" class="user-image" alt="User Image">
               <?php } ?>
-              <span class="hidden-xs"><?php echo $data['name']; ?></span>
+              <span class="hidden-xs"><?php echo $_SESSION['name']; ?></span>
             </a>
             <ul class="dropdown-menu">
               <!-- User image -->
               <li class="user-header">
                 <?php
-                if(empty($data['picture'])){ ?>
+                if(empty($_SESSION['picture'])){ ?>
                 <img src="../files/img/default-avatar.jpg" class="img-circle" alt="User Image">
                 <?php } else { ?>
-                <img src="../files/uploads/<?php echo $data['picture']; ?>" class="img-circle" alt="User Image">
+                <img src="../files/uploads/<?php echo $_SESSION['picture']; ?>" class="img-circle" alt="User Image">
                 <?php } ?>
-                <p><?php echo $data['name']; ?><small><?php
-                    if($data['role'] == '1'){
+                <p><?php echo $_SESSION['name']; ?><small><?php
+                    if($_SESSION['role'] == '1'){
                       echo "Root";
-                    } else if($data['role'] == '2'){
+                    } else if($_SESSION['role'] == '2'){
                       echo "Administrator";
-                    } elseif ($data['role'] == '3') {
+                    } elseif ($_SESSION['role'] == '3') {
                       echo "Sales Order";
-                    } elseif ($data['role'] == '4') {
+                    } elseif ($_SESSION['role'] == '4') {
                       echo "Finance";
-                    } elseif ($data['role'] == '5') {
+                    } elseif ($_SESSION['role'] == '5') {
                       echo "Guest";
-                    } elseif ($data['role'] == '6') {
+                    } elseif ($_SESSION['role'] == '6') {
                       echo "Production";
                     }
                     ?></small></p>
@@ -144,27 +129,27 @@ if($sql->num_rows > 0){
       <div class="user-panel">
         <div class="pull-left image">
           <?php
-          if(empty($data['picture'])){ ?>
+          if(empty($_SESSION['picture'])){ ?>
           <img src="../files/img/default-avatar.jpg" class="img-circle" alt="User Image">
           <?php } else { ?>
-          <img src="../files/uploads/<?php echo $data['picture']; ?>" class="img-circle" alt="User Image">
+          <img src="../files/uploads/<?php echo $_SESSION['picture']; ?>" class="img-circle" alt="User Image">
           <?php } ?>
         </div>
         <div class="pull-left info">
-          <p><?php echo $data['name']; ?></p>
+          <p><?php echo $_SESSION['name']; ?></p>
           <a href="#"><i class="text-success"></i> 
             <?php
-            if($data['role'] == '1'){
+            if($_SESSION['role'] == '1'){
               echo "Root";
-            } else if($data['role'] == '2'){
+            } else if($_SESSION['role'] == '2'){
               echo "Administrator";
-            } elseif ($data['role'] == '3') {
+            } elseif ($_SESSION['role'] == '3') {
               echo "Sales Order";
-            } elseif ($data['role'] == '4') {
+            } elseif ($_SESSION['role'] == '4') {
               echo "Finance";
-            } elseif ($data['role'] == '5') {
+            } elseif ($_SESSION['role'] == '5') {
               echo "Guest";
-            } elseif ($data['role'] == '6') {
+            } elseif ($_SESSION['role'] == '6') {
               echo "Production";
             }
             ?>
@@ -174,32 +159,32 @@ if($sql->num_rows > 0){
       <!-- sidebar menu: : style can be found in sidebar.less -->
       <ul class="sidebar-menu" data-widget="tree">
         <li class="header">MAIN NAVIGATION</li>
-        <?php if($data['account'] == '1'){ ?>
-          <?php if($data['role'] == '1' || $data['role'] == '2' || $data['role'] == '3' || $data['role'] == '4' || $data['role'] == '5' || $data['role'] == '6'){ ?>
+        <?php if($_SESSION['account'] == '1'){ ?>
+          <?php if($_SESSION['role'] == '1' || $_SESSION['role'] == '2' || $_SESSION['role'] == '3' || $_SESSION['role'] == '4' || $_SESSION['role'] == '5' || $_SESSION['role'] == '6'){ ?>
            <li>
             <a href="index.php?page=dashboard"><i class="fa fa-dashboard"></i> <span>SO Tracking</span></a>
           </li>
           <?php } ?>
 
-          <?php if($data['role'] == '1' || $data['role'] == '5'){ ?>
+          <?php if($_SESSION['role'] == '1' || $_SESSION['role'] == '5'){ ?>
           <li>
             <a href="index.php?page=company"><i class="fa fa-user-circle"></i> <span>Company</span></a>
           </li>
           <?php } ?>
 
-          <?php if($data['role'] == '1' || $data['role'] == '2' || $data['role'] == '5'){ ?>
+          <?php if($_SESSION['role'] == '1' || $_SESSION['role'] == '2' || $_SESSION['role'] == '5'){ ?>
           <li>
             <a href="index.php?page=vendor"><i class="fa fa-address-card-o"></i> <span>Vendor</span></a>
           </li>
           <?php } ?>
 
-          <?php if($data['role'] == '1' || $data['role'] == '2' || $data['role'] == '3' || $data['role'] == '4' || $data['role'] == '5' || $data['role'] == '6'){ ?>
+          <?php if($_SESSION['role'] == '1' || $_SESSION['role'] == '2' || $_SESSION['role'] == '3' || $_SESSION['role'] == '4' || $_SESSION['role'] == '5' || $_SESSION['role'] == '6'){ ?>
           <li>
             <a href="index.php?page=customer"><i class="fa fa-address-book"></i> <span>Customer</span></a>
           </li>
           <?php } ?>
 
-          <?php if($data['role'] == '1' || $data['role'] == '2' || $data['role'] == '5' || $data['role'] == '6'){ ?>
+          <?php if($_SESSION['role'] == '1' || $_SESSION['role'] == '2' || $_SESSION['role'] == '5' || $_SESSION['role'] == '6'){ ?>
           <li class="treeview">
             <a href="#">
               <i class="fa fa-pie-chart"></i>
@@ -214,25 +199,25 @@ if($sql->num_rows > 0){
           </li>
           <?php } ?>
 
-          <?php if($data['role'] == '1' || $data['role'] == '2' || $data['role'] == '5'){ ?>
+          <?php if($_SESSION['role'] == '1' || $_SESSION['role'] == '2' || $_SESSION['role'] == '5'){ ?>
           <li>
             <a href="index.php?page=purchase"><i class="fa fa-sticky-note-o"></i> <span>Purchase Order</span></a>
           </li>
           <?php } ?>
 
-          <?php if($data['role'] == '1' || $data['role'] == '2' || $data['role'] == '3' || $data['role'] == '5'){ ?>
+          <?php if($_SESSION['role'] == '1' || $_SESSION['role'] == '2' || $_SESSION['role'] == '3' || $_SESSION['role'] == '5'){ ?>
           <li>
             <a href="index.php?page=preorder"><i class="fa fa-book"></i> <span>Sales Order</span></a>
           </li>
           <?php } ?>
 
-          <?php if($data['role'] == '1' || $data['role'] == '2' || $data['role'] == '5'){ ?>
+          <?php if($_SESSION['role'] == '1' || $_SESSION['role'] == '2' || $_SESSION['role'] == '5'){ ?>
           <li>
             <a href="index.php?page=workorder"><i class="fa fa-send-o"></i> <span>Work Order</span></a>
           </li>
           <?php } ?>
 
-          <?php if($data['role'] == '1' || $data['role'] == '2' || $data['role'] == '4' || $data['role'] == '5'){ ?>
+          <?php if($_SESSION['role'] == '1' || $_SESSION['role'] == '2' || $_SESSION['role'] == '4' || $_SESSION['role'] == '5'){ ?>
           <li class="treeview">
             <a href="#">
               <i class="fa fa-truck"></i>
@@ -246,7 +231,7 @@ if($sql->num_rows > 0){
           </li>
           <?php } ?>
 
-          <?php if($data['role'] == '1' || $data['role'] == '4' || $data['role'] == '5'){ ?>
+          <?php if($_SESSION['role'] == '1' || $_SESSION['role'] == '4' || $_SESSION['role'] == '5'){ ?>
           <li class="treeview">
             <a href="#">
               <i class="fa fa-sticky-note-o"></i>
@@ -262,13 +247,13 @@ if($sql->num_rows > 0){
           </li>
           <?php } ?>
 
-          <?php if($data['role'] == '1' || $data['role'] == '4' || $data['role'] == '5'){ ?>
+          <?php if($_SESSION['role'] == '1' || $_SESSION['role'] == '4' || $_SESSION['role'] == '5'){ ?>
           <li>
             <a href="index.php?page=aging"><i class="fa fa-archive"></i> <span>Aging</span></a>
           </li>
           <?php } ?>
 
-          <?php if($data['role'] == '1' || $data['role'] == '4' || $data['role'] == '5'){ ?>
+          <?php if($_SESSION['role'] == '1' || $_SESSION['role'] == '4' || $_SESSION['role'] == '5'){ ?>
           <li class="treeview">
             <a href="#">
               <i class="fa fa fa-money"></i>
@@ -282,13 +267,13 @@ if($sql->num_rows > 0){
           </li>
           <?php } ?>
 
-          <?php if($data['role'] == '1'){ ?>
+          <?php if($_SESSION['role'] == '1'){ ?>
           <li>
             <a href="index.php?page=user"><i class="fa fa-users"></i> <span>User</span></a>
           </li>
           <?php } ?>
 
-          <?php if($data['role'] == '1'){ ?>
+          <?php if($_SESSION['role'] == '1'){ ?>
           <li>
             <a href="index.php?page=setting"><i class="fa fa-cogs"></i> <span>Settings</span></a>
           </li>
@@ -299,9 +284,3 @@ if($sql->num_rows > 0){
     </section>
     <!-- /.sidebar -->
   </aside>
-<?php } else {
-  session_destroy();
-  header("Location:../signin.php");
-  exit;
-}
-?>

@@ -205,6 +205,15 @@ if($action != ''){
       		$data_customer = array();
       		$data_item = array();
 
+			  $tabel1 = 'workorder_customer';
+			  $tabel2 = 'workorder_item';
+			  $tabel3 = 'preorder_item';
+			  $tabel4 = 'status';
+			  $tabel5 = 'delivery_orders_customer';
+			  $tabel6 = 'delivery_orders_item';
+			  $tabel7 = 'preorder_customer';
+			  $tabel8 = 'customer';
+
       		//mengambil id_fk berdasarkan id
       		$select1 = "SELECT id_fk FROM $tabel1 WHERE id = '".$id."'";
       		$query1 = $connect->query($select1);
@@ -238,7 +247,7 @@ if($action != ''){
 	      			$data_item[] = "('".$fetch1['id_fk']."', '1', '".$item_to."', '".$no_sj."', '".$qty."')";
 	      		}
 
-	      		//Menjumlah total tiap item yg dikirim berdasarkan id_fk
+	      		// Menjumlah total tiap item yg dikirim berdasarkan id_fk
 	      		$select3 = "SELECT a.qty AS req_qty, sum(b.send_qty) AS send_qty FROM preorder_item AS a LEFT JOIN delivery_orders_item AS b ON a.id_fk = b.id_fk AND a.item_to = b.item_to WHERE a.id_fk = '".$fetch1['id_fk']."' AND a.item_to = '".$item_to."'";
 	      		$query3 = $connect->query($select3);
 	      		$fetch3 = $query3->fetch_array();

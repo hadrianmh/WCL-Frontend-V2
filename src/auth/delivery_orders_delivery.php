@@ -332,6 +332,16 @@ if($action != ''){
       }
     }
 
+
+//     $tabel1 = 'status';
+// $tabel2 = 'delivery_orders_customer';
+// $tabel3 = 'delivery_orders_item';
+// $tabel4 = 'workorder_customer';
+// $tabel5 = 'workorder_item';
+// $tabel6 = 'user';
+// $tabel7 = 'preorder_item';
+// $tabel8 = 'invoice';
+
 	} elseif ($action == 'del_'.$slug){
     // Delete data
     if ($id == ''){

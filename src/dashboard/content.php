@@ -1,6 +1,5 @@
 <?php
 date_default_timezone_set("Asia/jakarta");
-require 'session.php';
 
 if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
@@ -37,7 +36,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
       <div class="row diagramDASHBOARD">
 
-        <?php if($data['role'] == '1' OR $data['role'] == '2' OR $data['role'] == '3' OR $data['role'] == '5'){ ?>
+        <?php if($_SESSION['role'] == '1' OR $_SESSION['role'] == '2' OR $_SESSION['role'] == '3' OR $_SESSION['role'] == '5'){ ?>
 
         <div class="col-lg-3 col-6">
           <!-- small box -->
@@ -53,7 +52,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
           </div>
         </div>
 
-        <?php } /* if($data['role'] == '1' OR $data['role'] == '2' OR $data['role'] == '5'){ ?>
+        <?php } /* if($_SESSION['role'] == '1' OR $_SESSION['role'] == '2' OR $_SESSION['role'] == '5'){ ?>
 
         <div class="col-lg-3 col-6">
           <!-- small box -->
@@ -69,7 +68,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
           </div>
         </div>
 
-        <?php } */ if($data['role'] == '1' OR $data['role'] == '2' OR $data['role'] == '5'){ ?>
+        <?php } */ if($_SESSION['role'] == '1' OR $_SESSION['role'] == '2' OR $_SESSION['role'] == '5'){ ?>
 
         <div class="col-lg-3 col-6">
           <!-- small box -->
@@ -85,7 +84,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
           </div>
         </div>
 
-        <?php } if($data['role'] == '1' OR $data['role'] == '4' OR $data['role'] == '5'){ ?>
+        <?php } if($_SESSION['role'] == '1' OR $_SESSION['role'] == '4' OR $_SESSION['role'] == '5'){ ?>
 
         <div class="col-lg-3 col-6">
           <!-- small box -->
@@ -103,7 +102,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
         <?php } ?>
 
-        <?php if($data['role'] == '1' OR $data['email'] == 'iskandarwisnu7@gmail.com' OR $data['email'] == 'yudisepta3091@gmail.com' OR $data['email'] == 'riawidiastuti83@gmail.com'){ ?>
+        <?php if($_SESSION['role'] == '1' OR $_SESSION['email'] == 'iskandarwisnu7@gmail.com' OR $_SESSION['email'] == 'yudisepta3091@gmail.com' OR $_SESSION['email'] == 'riawidiastuti83@gmail.com'){ ?>
         <div class="col-lg-12">
           <table id="tablenya" class="datatable nowrap" style="display: none">
             <thead>
@@ -238,7 +237,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
           <table id="tablenya" class="datatable responsive" style="width:100%">
             <thead>
               <tr>
-                  <th>No</th>
                   <th>Company</th>
                   <th>Address</th>
                   <th>Email</th>
@@ -3545,7 +3543,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
           <table id="tablenya" class="datatable responsive" style="width:100%">
             <thead>
               <tr>
-                  <th>No</th>
                   <th>Nama</th>
                   <th>Email</th>
                   <th>Peran</th>
@@ -3679,10 +3676,10 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
             <!-- left column -->
             <div class="col-md-3 avatars">
               <div class="text-center">
-              <?php if(empty($data['picture'])){ ?>
-                <img src="file:///C|/xampp/htdocs/apps/files/img/default-avatar.jpg" class="img-circle" alt="User Image">
+              <?php if(empty($_SESSION['picture'])){ ?>
+                <img src="../files/img/default-avatar.jpg" class="img-circle" alt="User Image">
               <?php } else { ?>
-                <img src="../files/uploads/<?php echo $data['picture']; ?>" class="img-circle" alt="User Image">
+                <img src="../files/uploads/<?php echo $_SESSION['picture']; ?>" class="img-circle" alt="User Image">
               <?php } ?>
               </div>
             </div>
@@ -3692,14 +3689,14 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
               <div class="form-group">
                 <label class="col-lg-3 control-label">Name:</label>
                 <div class="col-lg-8">
-                  <input class="form-control" type="text" placeholder="<?php echo $data['name']?>" value="<?php echo $data['name']?>" name="name" disabled>
+                  <input class="form-control" type="text" placeholder="<?php echo $_SESSION['name']?>" value="<?php echo $_SESSION['name']?>" name="name" disabled>
                 </div>
               </div>
 
               <div class="form-group">
                 <label class="col-lg-3 control-label">Email:</label>
                 <div class="col-lg-8">
-                  <input class="form-control" type="email" placeholder="<?php echo $data['email']?>" value="<?php echo $data['email']?>" name="email" disabled>
+                  <input class="form-control" type="email" placeholder="<?php echo $_SESSION['email']?>" value="<?php echo $_SESSION['email']?>" name="email" disabled>
                 </div>
               </div>
 
@@ -3708,17 +3705,17 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                 <div class="col-lg-8">
 
                   <?php
-                    if($data['role'] == '1'){ ?>
+                    if($_SESSION['role'] == '1'){ ?>
                       <input class="form-control" type="text" name="role" placeholder="Root" value="Root" disabled>
-                    <?php } else if($data['role'] == '2'){ ?>
+                    <?php } else if($_SESSION['role'] == '2'){ ?>
                       <input class="form-control" type="text" name="role" placeholder="Administrator" value="Administrator" disabled>
-                    <?php } elseif ($data['role'] == '3') { ?>
+                    <?php } elseif ($_SESSION['role'] == '3') { ?>
                       <input class="form-control" type="text" name="role" placeholder="Sales Order" value="Sales Order" disabled>
-                    <?php } elseif ($data['role'] == '4') { ?>
+                    <?php } elseif ($_SESSION['role'] == '4') { ?>
                       <input class="form-control" type="text" name="role" placeholder="Purchasing" value="Purchasing" disabled>
-                    <?php } elseif ($data['role'] == '5') { ?>
+                    <?php } elseif ($_SESSION['role'] == '5') { ?>
                       <input class="form-control" type="text" name="role" placeholder="Guest" value="Guest" disabled>
-                    <?php } elseif ($data['role'] == '6') { ?>
+                    <?php } elseif ($_SESSION['role'] == '6') { ?>
                       <input class="form-control" type="text" name="role" placeholder="Production" value="Production" disabled>
                     <?php } else { ?>
                       <input class="form-control" type="text" name="role" placeholder="" value="" disabled>
@@ -3733,9 +3730,9 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                 <div class="col-lg-8">
 
                   <?php
-                    if($data['status'] == '0'){ ?>
+                    if($_SESSION['status'] == '0'){ ?>
                       <input class="form-control" type="text" name="emailStatus" placeholder="Not verified" value="Not verified" disabled>
-                    <?php } else if($data['status'] == '1'){ ?>
+                    <?php } else if($_SESSION['status'] == '1'){ ?>
                       <input class="form-control" type="text" name="emailStatus" placeholder="Verified" value="Verified" disabled>
                     <?php } else { ?>
                       <input class="form-control" type="text" name="emailStatus" placeholder="" value="" disabled>
@@ -3749,13 +3746,13 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                 <div class="col-lg-8">
 
                    <?php
-                    if($data['account'] == '0'){ ?>
+                    if($_SESSION['account'] == '0'){ ?>
                       <input class="form-control" type="text" name="accountStatus" placeholder="Inactive" value="Inactive" disabled>
                       <br/>
                       <div class="alert alert-danger">
                         <strong>Account inactive. </strong><br/> Please contact the Administrator to activate your account and get access.
                       </div>
-                    <?php } else if($data['account'] == '1'){ ?>
+                    <?php } else if($_SESSION['account'] == '1'){ ?>
                       <input class="form-control" type="text" name="accountStatus" placeholder="Active" value="Active" disabled>
                     <?php } else { ?>
                       <input class="form-control" type="text" name="accountStatus" placeholder="" value="" disabled>
@@ -3782,16 +3779,16 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
               <span class="close lightbox_close">&times;</span>
               
               <h2 class="FormTitle" style="text-align: center">UBAH PROFIL</h2>
-              <form class="form add" id="form_ubahProfil" data-id="<?php echo $data['id']; ?>" novalidate>
+              <form class="form add" id="form_ubahProfil" data-id="<?php echo $_SESSION['id']; ?>" novalidate>
 
                 <div class="form-group nama">
                   <label for="name">Nama: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="name" id="name" value="<?php echo $data['name']?>" required>
+                  <input type="text" class="form-control" name="name" id="name" value="<?php echo $_SESSION['name']?>" required>
                 </div>
 
                 <div class="form-group email">
                   <label for="email">Email: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="email" id="email" value="<?php echo $data['email']?>" required>
+                  <input type="text" class="form-control" name="email" id="email" value="<?php echo $_SESSION['email']?>" required>
                 </div>
 
                 <div class="form-group password">
