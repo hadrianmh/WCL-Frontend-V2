@@ -1,14 +1,17 @@
 <?php
 
 class HttpRequest {
-    private $baseurl, $host, $port, $endpoint;
+    private $baseurl, $host, $port, $endpoint, $userid;
     private $token;
 
     public function __construct($credential = null) {
+        session_start();
         $this->host     = "host.docker.internal";
         $this->port     = "8082";
         $this->endpoint = "/api/v1";
         $this->token    = $credential;
+        $this->token    = $_SESSION['id'];
+
 
         $this->baseurl  = rtrim($this->host .':'. $this->port . $this->endpoint);
     }

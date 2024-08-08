@@ -1,3 +1,16 @@
+// Function to get a cookie value by name
+function getCookie(name) {
+	var nameEQ = name + "=";
+	var cookies = document.cookie.split(';');
+	for (var i = 0; i < cookies.length; i++) {
+		var cookie = cookies[i].trim();
+		if (cookie.indexOf(nameEQ) === 0) {
+			return cookie.substring(nameEQ.length);
+		}
+	}
+	return null;
+}
+
 $(document).ready(function(){
 
 	//////////////////////////
@@ -5,36 +18,70 @@ $(document).ready(function(){
 	/////////////////////////
 
 	var idTablenya = $('#tablenya');
-	var pathFile = '../auth/vendor.php';
+	var pathFile = 'http://localhost:8082/api/v1/dashboard';
 	var Act = 'action';
 	var sLug = 'vendor';
 	var FormsLug = 'VENDOR';
 	var IDForm = "#form_vendor";
 	var addButton = "#tambah_vendor";
-	var editButton = ".function_edit a";
-
-	//Message alert
-	var sukses = 'success';
 
 	///////////////////////////
 	// On page load: datatable
 	///////////////////////////
 
 	var tablenya = idTablenya.DataTable({
-	    "ajax": pathFile+"?"+Act+"=result_"+sLug,
-	    'columnDefs': [
-	    	{
-	    		'targets': [0,1,3,4],
-	    		'className': 'dt-nowrap'
-	        }
-	    ],
+		initComplete : function() {
+			var input = $('.dataTables_filter input').unbind(),
+			self = this.api(),
+			$searchButton = $(`<button class="btn btn-default"><i class="fa fa-search"></i></button>`).click(function(){ self.search(input.val()).draw(); });
+			$resetButton = $(`<button class="btn btn-default"><i class="fa fa-times"></i></button>`).click(function() { input.val('');$searchButton.click(); }); 
+			$('.dataTables_filter').append($searchButton, $resetButton);
+		},
+		"serverSide" : true,
+	    "ajax": {
+			"url" : pathFile+"/vendor",
+			"type": "GET",
+			"dataFilter": function(data) {
+				var obj = JSON.parse(data);
+				obj.data = obj.response.data;
+				obj.recordsTotal = obj.response.recordsTotal;
+				obj.recordsFiltered = obj.response.recordsFiltered;
+				return JSON.stringify( obj );
+			},
+			"dataSrc": function (json) {
+				if(json.code == 200) {
+					return json.response.data;
+				} else {
+					console.error('Error fetching data:', json);
+					return [];
+				}
+            },
+			"beforeSend": function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			},
+			"error": function (xhr, error, thrown) {
+				console.error('Error fetching data:', xhr, error, thrown);
+				alert('Terjadi kesalahan, silahkan login kembali.');
+				window.location.href = '/auth/signout.php';
+			}
+		},
 	    "columns": [
-	      { "data": "no" },
-	      { "data": "vendor" },
+	      { "data": "vendorname" },
 	      { "data": "address"},
-	      { "data": "phone" },
-	      { "data": "functions","sClass": "functions dt-nowrap" }
+	      { "data": "phone" }
 	    ],
+		"columnDefs": [
+			{
+				"targets": 3,
+				"data": null,
+				"defaultContent": "",
+				"render": function (data, type, row) {
+					return '<button class="btn btn-default function_edit" data-id="'+ data.id +'"><i class="fa fa-pencil"></i></button>';
+					// return '<button class="btn btn-default function_edit" data-id="'+ data.id +'"><i class="fa fa-pencil"></i></button> <button class="btn btn-default function_delete" data-id="'+ data.id +'" data-name="'+ data.vendorname +'"><i class="fa fa-trash"></i></button>';
+				}
+			}
+		],
 	    "lengthMenu": [[10, -1], [10, "All"]],
 	    iDisplayLength: 10,
 	    dom: 'Bfrtip',
@@ -150,36 +197,48 @@ $(document).ready(function(){
     	e.preventDefault();
 	    // Validate form
 	    if (FormNYA.valid() == true){
-	    	// Send company information to database
 	      	hide_ipad_keyboard();
 	      	hide_lightbox();
 	      	show_loading_message();
-	      	var Infos = $('#vendor').val();
-	      	var form_data = $(IDForm).serialize();
-	      	var request   = $.ajax({
-	        	url:          pathFile+"?"+Act+"=add_"+sLug,
-	        	cache:        false,
-	        	data:         form_data,
-	        	dataType:     'json',
-	        	contentType:  'application/json; charset=utf-8',
-	        	type:         'get'
-	      	});
+			
+	      	var form_data 	= $(IDForm).serializeArray();
+			var jsonData 	= {};
+			$.each(form_data, function(){
+				if(this.name == 'phone') {
+					value = parseInt(this.value);
+				} else {
+					value = this.value;
+				}
+				jsonData[this.name] = value;
+			});
+
+			var request   = $.ajax({
+				url:          pathFile+"/vendor",
+				type:         'POST',
+				data:         JSON.stringify(jsonData),
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
+     		});
+
 	      	request.done(function(output){
-	        	if (output.result == sukses){
+	        	if(output.status == "success"){
 	          		// Reload datable
 	          		tablenya.ajax.reload(function(){
 	            		hide_loading_message();
-	            		show_message("'"+Infos+"' berhasil dimasukan.", 'success');
+						var Infos = $('#vendor').val();
+	            		show_message("'"+Infos+"' added successfully.", 'success');
 	            		reset();
 	          		}, true);
 	        	} else {
 	          		hide_loading_message();
-	          		show_message('Gagal memasukan data', 'error');
+	          		show_message('Failed: '+output.response.message, 'error');
 	        	}
-	      	});
-	      	request.fail(function(jqXHR, textStatus){
-	        	hide_loading_message();
-	        	show_message('Gagal memasukan data: '+textStatus, 'error');
+			});
+			request.fail(function(jqXHR, textStatus){
+				hide_loading_message();
+	        	show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	      	});
 	    }
   	});
@@ -188,38 +247,38 @@ $(document).ready(function(){
   	// Edit button
 	////////////////////
 
-	$(document).on('click', editButton, function(e){
+	$(document).on('click', '.function_edit', function(e){
 		e.preventDefault();
-	    // Get company information from database
 	    show_loading_message();
 	    var id      = $(this).data('id');
 	    var request = $.ajax({
-	    	url:          pathFile+"?"+Act+"=get_"+sLug,
-	      	cache:        false,
+	    	url:          pathFile+"/vendor",
+			type:         'GET',
 	      	data:         'id='+id,
-	      	dataType:     'json',
-	      	contentType:  'application/json; charset=utf-8',
-	      	type:         'get'
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
 	    });
 	    request.done(function(output){
-	    	if (output.result == sukses){
+	    	if(output.status == "success"){
 	    		$('h2.FormTitle').text('UBAH '+FormsLug);
 	        	$(IDForm).attr('class', 'form edit_vendor');
 	        	$(IDForm).attr('data-id', id);
 	        	$('.field_container label.error').hide();
-	        	$('#vendor').val(output.data[0].vendor);
-		        $('#address').val(output.data[0].address);
-		        $('#phone').val(output.data[0].phone);
+	        	$('#vendor').val(output.response.data[0].vendorname);
+		        $('#address').val(output.response.data[0].address);
+		        $('#phone').val(output.response.data[0].phone);
 	        	hide_loading_message();
 	        	show_lightbox();
 	      	} else {
 	        	hide_loading_message();
-	        	show_message('Gagal mengambil data', 'error');
+	        	show_message('Failed: '+output.response.message, 'error');
 	      	}
 	    });
 	    request.fail(function(jqXHR, textStatus){
 	    	hide_loading_message();
-	      	show_message('Gagal mengambil data: '+textStatus, 'error');
+	      	show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	    });
 	});
 
@@ -234,33 +293,48 @@ $(document).ready(function(){
       		hide_ipad_keyboard();
       		hide_lightbox();
       		show_loading_message();
-      		var Infos = $('#vendor').val();
-      		var id        = $(IDForm).attr('data-id');
-      		var form_data = $(IDForm).serialize();
-      		var request   = $.ajax({
-        		url:          pathFile+"?"+Act+"=edit_"+sLug+"&id="+id,
-        		cache:        false,
-        		data:         form_data,
-        		dataType:     'json',
-        		contentType:  'application/json; charset=utf-8',
-        		type:         'get'
+      		var form_data 	= $(IDForm).serializeArray();
+      		var id			= $(IDForm).attr('data-id');
+
+      		var jsonData = {};
+			$.each(form_data, function(){
+				if(this.name == 'phone') {
+					value = parseInt(this.value);
+				} else {
+					value = this.value;
+				}
+				jsonData[this.name] = value;
+			});
+
+			jsonData.id = parseInt(id);
+
+			var request   = $.ajax({
+				url:          pathFile+"/vendor",
+				type:         'PUT',
+				data:         JSON.stringify(jsonData),
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
      		});
+
       		request.done(function(output){
-        		if (output.result == sukses){
+        		if(output.status == "success"){
           			// Reload datable
           			tablenya.ajax.reload(function(){
             			hide_loading_message();
-            			show_message("'"+Infos+"' berhasil mengubah.", 'success');
-            			reset();
+            			var Infos = $('#vendor').val();
+						show_message("'"+Infos+"' update successfully.", 'success');
+						reset();
           			}, true);
         		} else {
           			hide_loading_message();
-          			show_message('Gagal mengubah', 'error');
+          			show_message('Failed: '+output.response.message, 'error');
         		}
       		});
      		request.fail(function(jqXHR, textStatus){
         		hide_loading_message();
-        		show_message('Gagal mengubah: '+textStatus, 'error');
+        		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
       		});
     	}
   	});
@@ -268,36 +342,36 @@ $(document).ready(function(){
   	////////////////////
   	// Delete button
   	//////////////////
-  	$(document).on('click', '.function_delete a', function(e){
+  	$(document).on('click', '.function_delete', function(e){
 	    e.preventDefault();
 	    var Infos = $(this).data('name');
 	    if (confirm("Anda yakin ingin menghapus '"+Infos+"'?")){
 	    	show_loading_message();
-	      	var id      = $(this).data('id');
-	      	var request = $.ajax({
-	        	url:          pathFile+"?"+Act+"=del_"+sLug+"&id="+id,
-	        	cache:        false,
-	        	dataType:     'json',
-	        	contentType:  'application/json; charset=utf-8',
-	        	type:         'get'
-	      	});
+			var id      = $(this).data('id');
+			var request = $.ajax({
+				url:          pathFile+"/vendor/"+id,
+				type:         'DELETE',
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
+			});
 	      	
 	      	request.done(function(output){
-	        	if (output.result == sukses){
+	        	if(output.status == "success"){
 	          		// Reload datable
 	          		tablenya.ajax.reload(function(){
 	            		hide_loading_message();
-	            		show_message("'"+Infos+"' berhasil dihapus.", 'success');
+	            		show_message("'"+Infos+"' delete successfully.", 'success');
 	          		}, true);
 	        	} else {
 	          		hide_loading_message();
-	          		show_message('Gagal menghapus', 'error');
-	       		}
-	      	});
-	      	
-	      	request.fail(function(jqXHR, textStatus){
-	        	hide_loading_message();
-	        	show_message('Gagal menghapus: '+textStatus, 'error');
+	          		show_message('Failed: '+output.response.message, 'error');
+        		}
+      		});
+     		request.fail(function(jqXHR, textStatus){
+        		hide_loading_message();
+        		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	      	});
 	    }
   	});

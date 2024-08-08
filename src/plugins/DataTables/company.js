@@ -83,6 +83,7 @@ $(document).ready(function(){
 				"defaultContent": "",
 				"render": function (data, type, row) {
 					return '<button class="btn btn-default function_edit edit_company" data-id="'+ data.id +'"><i class="fa fa-pencil"></i></button>';
+					//return '<button class="btn btn-default function_edit edit_company" data-id="'+ data.id +'"><i class="fa fa-pencil"></i></button> <button class="btn btn-default function_delete" data-id="'+ data.id +'" data-name="'+ data.companyname +'"><i class="fa fa-trash"></i></button>';
 				}
 			},
 			{
@@ -216,7 +217,14 @@ $(document).ready(function(){
 	      	hide_ipad_keyboard();
 	      	hide_lightbox();
 	      	show_loading_message();
-			var tmp_logo	= document.querySelector('#ImageResult > img').src;
+			var tmp_logo;
+			const LogoElement = document.querySelector('#ImageResult > img');
+			if (LogoElement) {
+				tmp_logo = LogoElement.src;
+			} else {
+				tmp_logo = '';
+			}
+
 			var form_data 	= $(IDForm).serializeArray();
 			var jsonData 	= {};
 			$.each(form_data, function(){
@@ -250,7 +258,7 @@ $(document).ready(function(){
 	      	});
 	      	request.fail(function(jqXHR, textStatus){
 	        	hide_loading_message();
-	        	show_message('Gagal memasukan data: '+jqXHR.responseJSON.response.message, 'error');
+	        	show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	      	});
 	    }
   	});
@@ -309,7 +317,6 @@ $(document).ready(function(){
     	e.preventDefault();
     	// Validate form
     	if (FormNYA.valid() == true){
-      		// Send company information to database
       		hide_ipad_keyboard();
       		hide_lightbox();
       		show_loading_message();
@@ -363,31 +370,31 @@ $(document).ready(function(){
 	    var Infos = $(this).data('name');
 	    if (confirm("Anda yakin ingin menghapus '"+Infos+"'?")){
 	    	show_loading_message();
-	      	var id      = $(this).data('id');
-	      	var request = $.ajax({
-	        	url:          pathFile+"?"+Act+"=del_"+sLug+"&id="+id,
-	        	cache:        false,
-	        	dataType:     'json',
-	        	contentType:  'application/json; charset=utf-8',
-	        	type:         'get'
-	      	});
+			var id      = $(this).data('id');
+			var request = $.ajax({
+				url:          pathFile+"/company/"+id,
+				type:         'DELETE',
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
+			});
 	      	
 	      	request.done(function(output){
-	        	if (output.result == sukses){
+	        	if(output.status == "success"){
 	          		// Reload datable
 	          		tablenya.ajax.reload(function(){
 	            		hide_loading_message();
-	            		show_message("'"+Infos+"' berhasil dihapus.", 'success');
+	            		show_message("'"+Infos+"' delete successfully.", 'success');
 	          		}, true);
 	        	} else {
 	          		hide_loading_message();
-	          		show_message('Gagal menghapus', 'error');
-	       		}
-	      	});
-	      	
-	      	request.fail(function(jqXHR, textStatus){
-	        	hide_loading_message();
-	        	show_message('Gagal menghapus: '+textStatus, 'error');
+	          		show_message('Failed: '+output.response.message, 'error');
+        		}
+      		});
+     		request.fail(function(jqXHR, textStatus){
+        		hide_loading_message();
+        		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	      	});
 	    }
   	});

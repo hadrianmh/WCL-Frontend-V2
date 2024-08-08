@@ -5,7 +5,7 @@ $(document).ready(function(){
 	/////////////////////////
 
 	var idTablenya = $('#tablenya');
-	var pathFile = '../auth/purchase.php';
+	var pathFile = 'http://localhost:8082/api/v1/dashboard';
 	var Act = 'action';
 	var sLug = 'purchase';
 	var FormsLug = 'PURCHASE ORDER';
@@ -18,12 +18,13 @@ $(document).ready(function(){
 	var po_type_attribute = [];
 
 	/////////////////////////////////////////////////////////////////
-	// Set cookie as 'SelectMonth'
+	// Set cookie as 'archive'
 	/////////////////////////////////////////////////////////////////
 
 	var mm = ("0" + (new Date().getMonth() + 1)).slice(-2);
 	var yyyy = new Date().getFullYear();
-	var arsip = yyyy+"/"+mm;
+	var startdate = yyyy+"/"+mm;
+	var report = 'month';
 
 	function setCookie(cname, cvalue, exdays) {
 	    var d = new Date();
@@ -52,33 +53,48 @@ $(document).ready(function(){
 	/////////////////////////////////////////////////////////////////
 
 	var req = $.ajax({
-		url: pathFile+"?"+Act+"=sortdata_"+sLug,
-		cache: false,
-		dataType: 'json',
-		contentType: 'application/json; charset=utf-8',
-		type: 'get'
-	});
-
-	req.done(function(output){
-		if(output.result == sukses){
-			for(var i = 0; i<output.data.length; i++){
-				$("#sortby").append("<option value='"+output.data[i].montly+"' "+(getCookie("selectMonth") == output.data[i].montly ? 'selected' : '')+" >"+output.data[i].montly+"</option>");
-			}
-			setCookie("selectMonth", arsip, 1);
-
-		} else {
-	        show_message('Gagal memuat data', 'error');
+		url: pathFile+"/sortdata/archive?data=po_date&from=po_customer",
+		type: "GET",
+		beforeSend: function (xhr) {
+			xhr.setRequestHeader('Authorization', getCookie('access_token'));
+			xhr.setRequestHeader('Content-Type', 'application/json');
 		}
 	});
 
-	$(document).on('change', '#sortby', function(){
-		var valMonth = $(this).find(":selected").val();
-		setCookie("selectMonth", valMonth, 1);
+	req.done(function(output){
+		if(output.status == "success"){
+			for(var i=0; i<output.response.data[0].year.length; i++) {
+				$("#sortby").append("<option value='"+output.response.data[0].year[i]+"' data-name='year' "+(getCookie("startdate") == output.response.data[0].year[i] ? 'selected' : '')+" >Tahun: "+output.response.data[0].year[i]+"</option>");
+			}
+			
+			for(var i = 0; i<output.response.data[0].month.length; i++){
+				$("#sortby").append("<option value='"+output.response.data[0].month[i]+"' data-name='month' "+(getCookie("startdate") == output.response.data[0].month[i] ? 'selected' : '')+" >Bulan: "+output.response.data[0].month[i]+"</option>");
+			}
+			setCookie("report", report, 1);
+			setCookie("startdate", startdate, 1);
+
+		} else {
+	        show_message('Failed: sort data fetching.', 'error');
+		}
+	});
+
+	req.fail(function(jqXHR, textStatus){
+		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
+	});
+
+	$(document).on('change', '#sortby', function(e){
+		e.preventDefault()
+		report = $(this).attr('name');
+		startdate = $(this).find(":selected").val();
+		setCookie("report", report, 1);
+		setCookie("startdate", startdate, 1);
 	});
 
 	$(document).on('click', '#LoadData', function(){
-		var valMonth = $('#sortby').find(":selected").val();
-		setCookie("selectMonth", valMonth, 1);
+		report = $('#sortby').find(":selected").attr('data-name');
+		startdate = $('#sortby').find(":selected").val();
+		setCookie("report", report, 1);
+		setCookie("startdate", startdate, 1);
 		location.reload();
 	});
 
@@ -87,23 +103,23 @@ $(document).ready(function(){
 	/////////////////////////////////////////////////////////////////
 
 	var reqCompany = $.ajax({
-		dataType: 'json',
-		type: 'GET',
-		cache: false,
-		url: '../auth/json.php',
-		data: {
-			req: 'company'
+		url: pathFile+"/company?limit=-1&offset=0",
+		type: "GET",
+		beforeSend: function (xhr) {
+			xhr.setRequestHeader('Authorization', getCookie('access_token'));
+			xhr.setRequestHeader('Content-Type', 'application/json');
 		}
 	});
 
 	reqCompany.done(function(output){
-		companyJSON = output;
+		companyJSON = output.response.data;
 	});
+
 
 	reqCompany.fail(function(jqXHR, textStatus)
 	{
 		hide_loading_message();
-		show_message('Gagal mengambil daftar company: '+textStatus, 'error');
+		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	});
 
 	/////////////////////////////////////////////////////////////////
@@ -111,20 +127,22 @@ $(document).ready(function(){
 	/////////////////////////////////////////////////////////////////
 
 	var reqDetail = $.ajax({
-		dataType: 'json',
-		type: 'GET',
-		cache: false,
-		url: '../auth/purchase.php?action=po_type'
+		url: pathFile+"/purchase-order/suggest/type",
+		type: "GET",
+		beforeSend: function (xhr) {
+			xhr.setRequestHeader('Authorization', getCookie('access_token'));
+			xhr.setRequestHeader('Content-Type', 'application/json');
+		}
 	});
 
 	reqDetail.done(function(output){
-		po_typeJSON = output.data;
+		po_typeJSON = output.response.data;
 	});
 
 	reqDetail.fail(function(jqXHR, textStatus)
 	{
 		hide_loading_message();
-		show_message('Gagal mengambil daftar item: '+textStatus, 'error');
+		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	});
 
 	//////////////////////////////////////////////////////////////
@@ -132,20 +150,73 @@ $(document).ready(function(){
 	//////////////////////////////////////////////////////////////
 
 	var tablenya = idTablenya.DataTable({
+		initComplete : function() {
+			var input = $('.dataTables_filter input').unbind(),
+			self = this.api(),
+			$searchButton = $(`<button class="btn btn-default"><i class="fa fa-search"></i></button>`).click(function(){ self.search(input.val()).draw(); });
+			$resetButton = $(`<button class="btn btn-default"><i class="fa fa-times"></i></button>`).click(function() { input.val('');$searchButton.click(); }); 
+			$('.dataTables_filter').append($searchButton, $resetButton);
+		},
+		"serverSide" : true,
+	    "ajax": {
+			"url" : pathFile+"/purchase-order?report="+getCookie("report")+"&startdate="+getCookie("startdate")+"&enddate="+getCookie("enddate"),
+			"type": "GET",
+			"dataFilter": function(data) {
+				var obj = JSON.parse(data);
+				obj.data = obj.response.data;
+				obj.recordsTotal = obj.response.recordsTotal;
+				obj.recordsFiltered = obj.response.recordsFiltered;
+				return JSON.stringify( obj );
+			},
+			"dataSrc": function (json) {
+				if(json.code == 200) {
+					return json.response.data;
+				} else {
+					console.error('Error fetching data:', json);
+					return [];
+				}
+            },
+			"beforeSend": function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			},
+			"error": function (xhr, error, thrown) {
+				console.error('Error fetching data:', xhr, error, thrown);
+				alert('Terjadi kesalahan, silahkan login kembali.');
+				// window.location.href = '/auth/signout.php';
+			}
+		},
 		"scrollX": true,
-	    "ajax": pathFile+"?"+Act+"=result_"+sLug+"&curMonth="+getCookie("selectMonth"),
 	    'columnDefs': [
 	    	{
-	    		'targets': [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20,21,22],
+	    		'targets': [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20,21],
 	            'className': 'dt-nowrap'
-	        }
+	        },
+			{
+                "targets": [7,8,17,18,19],
+                "render": function(data, type, row) {
+                    return new Intl.NumberFormat('id-ID', {
+                        style: 'currency',
+                        currency: 'IDR',
+                        minimumFractionDigits: 2
+                    }).format(parseFloat(data));
+                }
+            },
+			{
+				"targets": 21,
+				"data": null,
+				"defaultContent": "",
+				"render": function (data, type, row) {
+					//return '<button class="btn btn-default function_edit" data-id="'+ data.id +'"><i class="fa fa-pencil"></i></button>';
+					return '<button class="btn btn-default UbahVendor" data-id="'+ data.po_id +'" title="Edit Vendor"><i class="fa fa-user"></i></button> <button class="btn btn-default UbahItem" data-id="'+ data.itemid +'" title="Edit Item"><i class="fa fa-cube"></i></button> <button class="btn btn-default PrintView" data-id="'+ data.po_id +'" title="Print View"><i class="fa fa-print"></i></button> <button class="btn btn-default HapusItem" data-id="'+ data.itemid +'" data-name="'+data.detail+'" title="Delete"><i class="fa fa-trash"></i></button>';
+				}
+			}
 	    ],
 	    "columns": [
-	      { "data": "no" },
 	      { "data": "po_date" },
 	      { "data": "company" },
 	      { "data": "vendor" },
-	      { "data": "nopo" },
+	      { "data": "po_number" },
 	      { "data": "po_type" },
 	      { "data": "detail"},
 	      { "data": "size"},
@@ -154,20 +225,19 @@ $(document).ready(function(){
 	      { "data": "qty"},
 	      { "data": "unit"},
 	      { "data": "merk"},
-	      { "data": "type"},
+	      { "data": "item_type"},
 	      { "data": "core"},
-	      { "data": "gulungan"},
-	      { "data": "bahan"},
+	      { "data": "roll"},
+	      { "data": "material"},
 	      { "data": "note"},
 	      { "data": "subtotal"},
 	      { "data": "tax"},
 	      { "data": "total"},
-	      { "data": "input"},
-	      { "data": "functions","sClass": "functions" }
+	      { "data": "user"},
 	    ],
 	    "lengthMenu": [[10, -1], [10, "All"]],
 	    iDisplayLength: 10,
-	    dom: 'Bfrtip',
+		dom: 'Bfrtip',
         buttons: [ 
         	'pageLength',
         	{
@@ -191,45 +261,8 @@ $(document).ready(function(){
 	      "sLengthMenu":    "Records per page: _MENU_",
 	      "sInfo":          "Total of _TOTAL_ records (showing _START_ to _END_)",
 	      "sInfoFiltered":  "(filtered from _MAX_ total records)"
-	    }
-	});
-
-	//////////////////////////////////////////////////////////////
-	// Create function print all with hidden table
-	/////////////////////////////////////////////////////////////
-
-	var tablePrint = $("#tablePrint").DataTable({
-		"scrollX": false,
-		"bPaginate": false,
-		"searching": false,
-		"info": false,
-	    "ajax": pathFile+"?"+Act+"=resultAll_"+sLug+"&curMonth="+getCookie("selectMonth"),
-	    "columns": [
-	      { "data": "no" },
-	      { "data": "po_date" },
-	      { "data": "company" },
-	      { "data": "vendor" },
-	      { "data": "nopo" },
-	      { "data": "po_type" },
-	      { "data": "detail"},
-	      { "data": "size"},
-	      { "data": "price_1"},
-	      { "data": "price_2"},
-	      { "data": "qty"},
-	      { "data": "unit"},
-	      { "data": "merk"},
-	      { "data": "type"},
-	      { "data": "core"},
-	      { "data": "gulungan"},
-	      { "data": "bahan"},
-	      { "data": "note"},
-	      { "data": "subtotal"}, //18
-	      { "data": "tax"},
-	      { "data": "total"},
-	      { "data": "input"},
-	    ],
-	    iDisplayLength: -1,
-	    "footerCallback": function ( row, data, start, end, display ) {
+	    },
+		"footerCallback": function ( row, data, start, end, display ) {
         	var api = this.api(), data;
             var intVal = function ( i ) {
                 return typeof i === 'string' ?
@@ -237,32 +270,31 @@ $(document).ready(function(){
                     typeof i === 'number' ?
                         i : 0;
             };
-            SubTotal = api.column( 18, { page: 'current'} ).data().reduce( function (a, b) {
+            SubTotal = api.column( 17, { page: 'current'} ).data().reduce( function (a, b) {
             	return intVal(a) + intVal(b);
             }, 0 );
 
-            Tax = api.column( 19, { page: 'current'} ).data().reduce( function (a, b) {
+            Tax = api.column( 18, { page: 'current'} ).data().reduce( function (a, b) {
             	return intVal(a) + intVal(b);
             }, 0 );
 
             Totals = SubTotal + Tax;
 
-            $( api.column( 18 ).footer() ).html(convertToRupiah(SubTotal));
-            $( api.column( 19 ).footer() ).html(convertToRupiah(Tax));
-            $( api.column( 20 ).footer() ).html(convertToRupiah(Totals));
+            $( api.column( 17 ).footer() ).html(convertToRupiah(SubTotal));
+            $( api.column( 18 ).footer() ).html(convertToRupiah(Tax));
+            $( api.column( 19 ).footer() ).html(convertToRupiah(Totals));
         }
-	    
 	});
 
-	var buttons = new $.fn.dataTable.Buttons(tablePrint, {
+	var buttons = new $.fn.dataTable.Buttons(tablenya, {
 		buttons:[
         {
         	extend: 'excelHtml5',
         	messageTop: false,
         	footer: true,
         	text: 'Export to Excel',
-        	filename : 'PurchaseOrder-'+getCookie("selectMonth"),
-        	title: 'PURCHASE ORDER '+getCookie("selectMonth"),
+        	filename : 'PurchaseOrder-'+(getCookie("report") == "month" || getCookie("report") == "year" ? getCookie("report") + "_" + getCookie("startdate") : getCookie("startdate") +"_"+ getCookie("enddate")),
+        	title: 'PURCHASE ORDER '+(getCookie("report") == "month" || getCookie("report") == "year" ? getCookie("report") + "_" + getCookie("startdate") : getCookie("startdate") +"_"+ getCookie("enddate")),
         }
 		]
 	}).container().appendTo($('.dt-buttons'));
@@ -335,6 +367,9 @@ $(document).ready(function(){
 	}
 
 	function reset(){
+		if(document.getElementById("form_AddItemPO")) {
+			$('#form_AddItemPO').attr('id', 'form_inputPO');
+		}
 		$('.tambah_barang').hide();
 		$('.tanda_tangan').hide();
         $('.address').hide();
@@ -359,13 +394,14 @@ $(document).ready(function(){
 		$('.bahan').hide();
 		$('.price_2').hide();
 		$('.unit').hide();
+		$('.po_number').hide();
 		$('#detail').attr('name','data[detail][]');
         $('#size').attr('name','data[size][]');
         $('#merk').attr('name','data[merk][]');
         $('#type').attr('name','data[type][]');
         $('#core').attr('name','data[core][]');
-        $('#gulungan').attr('name','data[gulungan][]');
-        $('#bahan').attr('name','data[bahan][]');
+        $('#gulungan').attr('name','data[roll][]');
+        $('#bahan').attr('name','data[material][]');
         $('#price_1').attr('name','data[price_1][]');
         $('#price_2').attr('name','data[price_2][]');
         $('#qty').attr('name','data[qty][]');
@@ -373,6 +409,7 @@ $(document).ready(function(){
         $('#vendor').attr('readonly', false);
 		$('#id_vendor').attr('readonly', false);
 		$('#po_date').attr('readonly', false);
+		$('#po_type_add_item').attr('id', 'po_type');
 		document.getElementById("po_type").disabled = false;
 		$('#detail').attr('readonly', false);
 		$('#size').attr('readonly', false);
@@ -408,9 +445,12 @@ $(document).ready(function(){
 	}
 
 	function convertToRupiah(angka){
-		var checked = angka.toString().split('.').join(',');
-		var filter = 'Rp. ' + checked.replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.");
-		return filter;
+		let formatted = new Intl.NumberFormat('id-ID', {
+			style: 'currency',
+			currency: 'IDR',
+			minimumFractionDigits: 2
+		}).format(angka);
+		return formatted;
 	}
 
 	/////////////////////////////////////////////////////////
@@ -426,8 +466,8 @@ $(document).ready(function(){
 	}
 
 	function periode_reset(){
-		$('#dari').val('');
-		$('#sampai').val('');
+		$('#startdate').val('');
+		$('#enddate').val('');
 	}
 
 	$(document).on('click', '.periode_close', function(){
@@ -443,42 +483,227 @@ $(document).ready(function(){
     	hide_ipad_keyboard();
       	periode_hide();
       	show_loading_message();
-      	var form_data = $(FormPeriode).serialize();
-      	var request   = $.ajax({
-        	url:          pathFile+"?"+Act+"=periode_"+sLug,
-        	cache:        false,
-        	data:         form_data,
-        	method: 	  'GET',
-        	dataType: 'json'
-      	});
+		report = $("#report").val();
+		startdate = $("#startdate").val();
+		enddate = $("#enddate").val();
+      	var request = $.ajax({
+	    	url:          pathFile+"/purchase-order",
+			type:         'GET',
+			data:         'report='+report+'&startdate='+startdate+'&enddate='+enddate,
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
+	    });
 
       	request.done(function(output){
-	    	if (output.result == sukses){
-	    		tablenya.ajax.url(pathFile+"?"+Act+"=periode_"+sLug+"&"+form_data).load();
-      			tablePrint.ajax.url(pathFile+"?"+Act+"=periode_"+sLug+"&"+form_data).load();
-      			tablenya.draw();
-      			tablePrint.draw();
-        		hide_loading_message();
-        		show_message("Berhasil memuat dimasukan.", 'success');
-        		periode_reset();
+	    	if(output.status == "success"){
+	    		// tablenya.ajax.url(pathFile+"/purchase-order"+form_data).load();
+      			// tablenya.draw();
+				setCookie("report", report, 1);
+				setCookie("startdate", startdate, 1);
+				setCookie("enddate", enddate, 1);
+        		location.reload();
 
 	    	} else {
 	      		hide_loading_message();
-	      		show_message(output.message, 'error');
+	      		show_message('Failed: '+output.response.message, 'error');
 	    	}
 	  	});
 
 	  	request.fail(function(jqXHR, textStatus){
 	    	hide_loading_message();
-	    	show_message('Gagal memuat data: '+textStatus, 'error');
+	    	show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	  	});
+  	});
+	
+	
+	///////////////////
+	// Add Item PO
+  	//////////////////
+
+  	$(document).on('click', '#add_item_po', function(e){
+		e.preventDefault();
+		$(IDForm).attr('id', 'form_AddItemPO');
+		$('H2.FormTitle').text('ADD ITEM '+FormsLug);
+		$('#form_AddItemPO').attr('class', 'form add');
+		$('#form_AddItemPO').attr('data-id', '');
+		$('#po_type').attr('id', 'po_type_add_item');
+		$('.po_number').show();
+		$('.company').hide();
+		$('.vendor').hide();
+		$('.po_date').hide();
+		$('.ppns').hide();
+		$('.note').hide();
+		$('#po_type_add_item').empty();
+		show_lightbox();
+
+		$('#po_type_add_item').append('<option value="" selected disabled>Pilih Tipe</option>');
+		for(var z = 0; z < po_typeJSON.length; z++)	
+		{
+			$('#po_type_add_item').append('<option value="'+po_typeJSON[z].id+'">' +po_typeJSON[z].item+ '</option>');
+		}
+
+	  	////////////////////////////////////////
+		// auto complete customer
+		//////////////////////////////////////
+
+		$.widget( "custom.catcomplete", $.ui.autocomplete, {
+			_create: function()
+			{
+				this._super();
+				this.widget().menu( "option", "items", "> :not(.ui-autocomplete-category)" );
+			},
+
+			_renderMenu: function( ul, items )
+			{
+				var that = this,
+				currentCategory = "";
+				$.each( items, function( index, item )
+				{
+					var li;
+					if ( item.category != currentCategory )
+					{
+						ul.append( "<li class='ui-autocomplete-category'>" + item.category + "</li>" );
+						currentCategory = item.category;
+					}
+					li = that._renderItemData( ul, item );
+					if ( item.category )
+					{
+						li.attr( "aria-label", item.category + " : " + item.label );
+					}
+				});
+			}
+		});
+
+		$('#po_number').catcomplete({
+			minLength: 4,
+			source: function(request, response)
+			{
+				$.ajax({
+					url: pathFile+"/purchase-order/suggest/po?keyword="+request.term,
+					type: "GET",
+					beforeSend: function (xhr) {
+						xhr.setRequestHeader('Authorization', getCookie('access_token'));
+						xhr.setRequestHeader('Content-Type', 'application/json');
+					},
+					success: function(output)
+					{
+						response(output.response.data);
+					}
+				});
+			},
+			select: function(event, ui)
+			{
+				$('#po_number').val(ui.item.category);
+				$('#fkid').val(ui.item.fkid);
+			}
+		});
+
+		$('#po_number').keyup(function(){
+			$('#po_type').val('');
+			$('.po_type').val('');
+			$('#detail').val('');
+			$('#size').val('');
+			$('#merk').val('');
+			$('#type').val('');
+			$('#core').val('');
+			$('#gulungan').val('');
+			$('#bahan').val('');
+			$('#price_1').val('');
+			$('#price_2').val('');
+			$('#qty').val('');
+			$('#unit').val('');
+			$('#looping_barang').empty();
+		});
+	});
+
+	///////////////////////////
+	// submit form Add Item PO
+  	/////////////////////////
+
+  	$(document).on('submit', '#form_AddItemPO.add', function(e){
+    	e.preventDefault();
+    	// Validate form
+    	if (FormNYA.valid() == true)
+		{
+      		hide_ipad_keyboard();
+      		hide_lightbox();
+      		show_loading_message();
+      		
+			var formDataArray = $(this).serializeArray();
+			var formDataObject = {
+				items: []
+			};
+			
+			var arr = [];
+			var dataGroups = {};
+			
+			formDataArray.forEach(function(item) {
+				if (item.name.startsWith("data[")) {
+					var matches = item.name.match(/data\[([^\]]+)\]\[(\d*)\]/);
+					if (matches) {
+						let count = arr.reduce(function(accumulator, currentValue) {
+							return currentValue === matches[1] ? accumulator + 1 : accumulator;
+						}, 0);
+
+						var fieldName = matches[1];
+						var index = count;
+		
+						if (!dataGroups[index]) {
+							dataGroups[index] = {};
+						}
+		
+						var value = (fieldName === 'qty')? parseInt(item.value): item.value;
+						dataGroups[index][fieldName] = value;
+						arr.push(matches[1]);
+					}
+				} else {
+					var value = (item.name === 'fkid')? parseInt(item.value) : item.value; 
+					formDataObject[item.name] = value;
+				}
+			});
+	
+			for (var key in dataGroups) {
+				formDataObject.items.push(dataGroups[key]);
+			}
+
+			var request   = $.ajax({
+				url:          pathFile+"/purchase-order/item",
+				type:         'POST',
+				data:         JSON.stringify(formDataObject, null, 2),
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
+			 });
+
+      		request.done(function(output){
+        		if(output.status == "success"){
+          			// Reload datable
+          			tablenya.ajax.reload(function(){
+            			hide_loading_message();
+            			var Infos = $('#po_number').val();
+            			show_message("'"+Infos+"' create successfully.", 'success');
+            			reset();
+          			}, true);
+        		} else {
+          			hide_loading_message();
+          			show_message('Failed: '+output.response.message, 'error');
+        		}
+      		});
+     		request.fail(function(jqXHR, textStatus){
+        		hide_loading_message();
+        		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
+      		});
+    	}
   	});
 
 	///////////////////
 	// Add PO button
   	//////////////////
 
-  	$(document).on('click', '#add_inputPO', function(e){
+  	$(document).on('click', '#create_po', function(e){
   		e.preventDefault();
 		$('H2.FormTitle').text('INPUT '+FormsLug);
 		$(IDForm).attr('class', 'form add');
@@ -492,7 +717,7 @@ $(document).ready(function(){
 		$('#company').append('<option selected disabled>Pilih Entitas</option>');
 		for(var x = 0; x<companyJSON.length; x++)
 		{
-			$('#company').append('<option value="'+companyJSON[x].id+'">'+companyJSON[x].company+'</option>');
+			$('#company').append('<option value="'+companyJSON[x].id+'">'+companyJSON[x].companyname+'</option>');
 		}
 
 		$('#po_type').append('<option value="" selected disabled>Pilih Tipe</option>');
@@ -535,66 +760,64 @@ $(document).ready(function(){
 
 	  	$('#vendor').catcomplete({
 	  		minLength: 2,
-	  		source: function(request, respone)
+	  		source: function(request, response)
 	  		{
-	  			$.ajax({
-	  				url: '../auth/json.php',
-	  				dataType: 'json',
-	  				type: 'GET',
-	  				data: {
-	  					req: 'vendor',
-	  					keyword: request.term
-	  				},
-	  				success: function(data)
+				$.ajax({
+					url: pathFile+"/purchase-order/suggest/vendor?keyword="+request.term,
+					type: "GET",
+					beforeSend: function (xhr) {
+						xhr.setRequestHeader('Authorization', getCookie('access_token'));
+						xhr.setRequestHeader('Content-Type', 'application/json');
+					},
+					success: function(output)
 	  				{
-	  					respone(data);
+	  					response(output.response.data);
 	  				}
-	  			});
+				});
 	  		},
 	  		select: function(event, ui)
 	  		{
-	  			var vendor = ui.item.id_vendor;
-	  			var id_po = ui.item.id_po;
-	  			var meminta = $.ajax({
-	  				url: '../auth/json.php',
+	  			var poid = ui.item.po_id;
+	  			var vendorid = ui.item.vendorid;
+				if(!poid) {
+					poid = 0;
+				}
+				
+	  			var getSuggestItem = $.ajax({
+					url: pathFile+"/purchase-order/suggest/item?vendorid="+vendorid+"&poid="+poid,
 	  				type: 'GET',
-	  				dataType: 'json',
-	  				cache: false,
-	  				data: {
-	  					req: 'po_item',
-	  					vendor: vendor,
-	  					id: id_po
-	  				},
-
-	  				contentType: 'application/json; charset=utf-8'
+	  				beforeSend: function (xhr) {
+						xhr.setRequestHeader('Authorization', getCookie('access_token'));
+						xhr.setRequestHeader('Content-Type', 'application/json');
+					},
 	  			});
 
-	  			meminta.done(function(output)
-	  			{
-	  				reset();
-	  				$('#id_vendor').val(output.value[0].id_vendor);
-	  				if(parseInt(output.value[0].id_po) > 0)
+	  			getSuggestItem.done(function(output) {
+					reset();
+	  				$('#id_vendor').val(output.response.data[0].vendorid);
+	  				if(parseInt(output.response.data[0].po_id) > 0)
 	  				{
-	  					po_type_attribute = output.input[0].attribute; 
-	  					var split_input = output.input[0].attribute.split(',');
-	  					$('#po_type').val(output.input[0].type);
+	  					po_type_attribute = output.response.data[0].attr; 
+	  					var split_input = output.response.data[0].attr.split(',');
+	  					$('#po_type').val(output.response.data[0].type);
+	  					$('.po_type').val(output.response.data[0].type);
 	  					$('.tambah_barang').show();
 
-	  					for(var x = 0; x < output.value.length; x++)
+	  					for(var x = 0; x < output.response.data[0].items.length; x++)
 	  					{
 	  						if(parseInt(x) === 0)
 	  						{
-	  							$('#detail').val(output.value[x].detail);
-								$('#size').val(output.value[x].size);
-								$('#merk').val(output.value[x].merk);
-								$('#type').val(output.value[x].type);
-								$('#core').val(output.value[x].core);
-								$('#gulungan').val(output.value[x].gulungan);
-								$('#bahan').val(output.value[x].bahan);
-								$('#price_1').val(output.value[x].price_1);
-								$('#price_2').val(output.value[x].price_2);
-								$('#qty').val(output.value[x].qty);
-								$('#unit').val(output.value[x].unit);
+	  							$('#detail').val(output.response.data[0].items[x].detail);
+								$('#size').val(output.response.data[0].items[x].size);
+								$('#merk').val(output.response.data[0].items[x].merk);
+								$('#type').val(output.response.data[0].items[x].type);
+								$('#core').val(output.response.data[0].items[x].core);
+								$('#gulungan').val(output.response.data[0].items[x].roll);
+								$('#bahan').val(output.response.data[0].items[x].material);
+								$('#price_1').val(output.response.data[0].items[x].price_1);
+								$('#price_2').val(output.response.data[0].items[x].price_2);
+								$('#qty').val(output.response.data[0].items[x].qty);
+								$('#unit').val(output.response.data[0].items[x].unit);
 								for(var i = 0; i < split_input.length; i++)
 			  					{
 			  						$('.'+split_input[i]).show();
@@ -603,7 +826,7 @@ $(document).ready(function(){
 	  						} else {
 	  							loopN++;
 	  							$('#looping_barang').append(
-	  								'<div class="looping_barang" id="looping-'+loopN+'"><hr class="looping-item"><p><button type="button" name="remove" data-id="'+loopN+'" class="btn btn-danger btn_remove">Hapus</button></p><div class="form-group detail-'+loopN+'" style="display: none"><label for="detail">Detail: <span class="required">*</span></label><input type="text" class="form-control" name="data[detail][]" id="detail" value="'+output.value[x].detail+'" required></div><div class="form-group size-'+loopN+'" style="display: none"><label for="Size">Size: <span class="required">*</span></label><input type="number" class="form-control sizeval_'+loopN+'" name="data[size][]" id="size" value="'+output.value[x].size+'" required></div><div class="form-group merk-'+loopN+'" style="display: none"><label for="merk">Merk: <span class="required">*</span></label><input type="text" class="form-control" name="data[merk][]" id="merk" value="'+output.value[x].merk+'" required></div><div class="form-group type-'+loopN+'" style="display: none"><label for="type">Type: <span class="required">*</span></label><input type="text" class="form-control" name="data[type][]" id="type" value="'+output.value[x].type+'" required></div><div class="form-group core-'+loopN+'" style="display: none"><label for="core">Core: <span class="required">*</span></label><input type="text" class="form-control" name="data[core][]" id="core" value="'+output.value[x].core+'" required></div><div class="form-group gulungan-'+loopN+'" style="display: none"><label for="gulungan">Gulungan: <span class="required">*</span></label><input type="text" class="form-control" name="data[gulungan][]" id="gulungan" value="'+output.value[x].gulungan+'" required></div><div class="form-group bahan-'+loopN+'" style="display: none"><label for="bahan">Bahan: <span class="required">*</span></label><input type="text" class="form-control" name="data[bahan][]" id="bahan" value="'+output.value[x].bahan+'" required></div><div class="form-group price_1"><label for="price_1">Price: <span class="required">*</span></label><input type="text" class="form-control price_1_looping-'+loopN+'" name="data[price_1][]" id="price_1" value="'+output.value[x].price_1+'" required></div><div class="form-group price_2-'+loopN+'" style="display: none"><label for="price_2">Price (Secondary): <span class="required">*</span> <em class="label label-success">Size x Price = Price (secondary)</em></label><div class="row"><div class="col-md-10"><input type="text" class="form-control price_2_looping-'+loopN+'" name="data[price_2][]" id="price_2" value="'+output.value[x].price_2+'" required></div><div class="col-md-2"><button type="button" class="btn btn-primary hitung_'+loopN+'">Hitung</button></div></div><div class="form-group qty"><label for="qty">Qty: <span class="required">*</span></label><input type="number" min="0" class="form-control" name="data[qty][]" id="qty" value="'+output.value[x].qty+'" required></div><div class="form-group unit-'+loopN+'" style="display: none"><label for="unit">Unit: <span class="required">*</span></label><input type="text" class="form-control" name="data[unit][]" id="unit" value="'+output.value[x].unit+'" required></div><script>$(document).ready(function(){ $(".price_1_looping-'+loopN+'").mask("0.000.000.000.000,00", {reverse: true});$(".price_2_looping-'+loopN+'").mask("0.000.000.000.000,00", {reverse: true});$(document).on("click", ".hitung_'+loopN+'", function(e){ var ukuran_'+loopN+' = $(".sizeval_'+loopN+'").val();var harga_'+loopN+' = $(".price_1_looping-'+loopN+'").val().replace(/\\./g,"");$(".price_2_looping-'+loopN+'").val(parseInt(ukuran_'+loopN+' * harga_'+loopN+'.replace(/\\,/g,".")));});});</script></div>'
+	  								'<div class="looping_barang" id="looping-'+loopN+'"><hr class="looping-item"><p><button type="button" name="remove" data-id="'+loopN+'" class="btn btn-danger btn_remove">Hapus</button></p><div class="form-group detail-'+loopN+'" style="display: none"><label for="detail">Detail: <span class="required">*</span></label><input type="text" class="form-control" name="data[detail][]" id="detail" value="'+output.response.data[0].items[x].detail+'" required></div><div class="form-group size-'+loopN+'" style="display: none"><label for="Size">Size: <span class="required">*</span></label><input type="number" class="form-control sizeval_'+loopN+'" name="data[size][]" id="size" value="'+output.response.data[0].items[x].size+'" required></div><div class="form-group merk-'+loopN+'" style="display: none"><label for="merk">Merk: <span class="required">*</span></label><input type="text" class="form-control" name="data[merk][]" id="merk" value="'+output.response.data[0].items[x].merk+'" required></div><div class="form-group type-'+loopN+'" style="display: none"><label for="type">Type: <span class="required">*</span></label><input type="text" class="form-control" name="data[type][]" id="type" value="'+output.response.data[0].items[x].type+'" required></div><div class="form-group core-'+loopN+'" style="display: none"><label for="core">Core: <span class="required">*</span></label><input type="text" class="form-control" name="data[core][]" id="core" value="'+output.response.data[0].items[x].core+'" required></div><div class="form-group gulungan-'+loopN+'" style="display: none"><label for="gulungan">Gulungan: <span class="required">*</span></label><input type="text" class="form-control" name="data[roll][]" id="gulungan" value="'+output.response.data[0].items[x].roll+'" required></div><div class="form-group bahan-'+loopN+'" style="display: none"><label for="bahan">Bahan: <span class="required">*</span></label><input type="text" class="form-control" name="data[material][]" id="bahan" value="'+output.response.data[0].items[x].material+'" required></div><div class="form-group price_1"><label for="price_1">Price: <span class="required">*</span></label><input type="text" class="form-control price_1_looping-'+loopN+'" name="data[price_1][]" id="price_1" value="'+output.response.data[0].items[x].price_1+'" required></div><div class="form-group price_2-'+loopN+'" style="display: none"><label for="price_2">Price (Secondary): <span class="required">*</span> <em class="label label-success">Size x Price = Price (secondary)</em></label><div class="row"><div class="col-md-10"><input type="text" class="form-control price_2_looping-'+loopN+'" name="data[price_2][]" id="price_2" value="'+output.response.data[0].items[x].price_2+'" required></div><div class="col-md-2"><button type="button" class="btn btn-primary hitung_'+loopN+'">Hitung</button></div></div><div class="form-group qty"><label for="qty">Qty: <span class="required">*</span></label><input type="number" min="0" class="form-control" name="data[qty][]" id="qty" value="'+output.response.data[0].items[x].qty+'" required></div><div class="form-group unit-'+loopN+'" style="display: none"><label for="unit">Unit: <span class="required">*</span></label><input type="text" class="form-control" name="data[unit][]" id="unit" value="'+output.response.data[0].items[x].unit+'" required></div><script>$(document).ready(function(){ $(".price_1_looping-'+loopN+'").mask("0.000.000.000.000,00", {reverse: true});$(".price_2_looping-'+loopN+'").mask("0.000.000.000.000,00", {reverse: true});$(document).on("click", ".hitung_'+loopN+'", function(e){ var ukuran_'+loopN+' = $(".sizeval_'+loopN+'").val();var harga_'+loopN+' = $(".price_1_looping-'+loopN+'").val().replace(/\\./g,"");$(".price_2_looping-'+loopN+'").val(parseInt(ukuran_'+loopN+' * harga_'+loopN+'.replace(/\\,/g,".")));});});</script></div>'
 	  							);
 
 	  							for(var i = 0; i < split_input.length; i++)
@@ -615,10 +838,10 @@ $(document).ready(function(){
 	  				}
 	  			});
 
-	  			meminta.fail(function(jqXHR, textStatus)
+	  			getSuggestItem.fail(function(jqXHR, textStatus)
 	  			{
 	  				hide_loading_message();
-	  				show_message('Gagal mengambil data: '+textStatus, 'error');
+	  				show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	  			});
 
 	  		}
@@ -627,6 +850,7 @@ $(document).ready(function(){
 	  	$('#vendor').keyup(function(){
 	  		$('#id_vendor').val('');
 	  		$('#po_type').val('');
+	  		$('.po_type').val('');
 	  		$('#detail').val('');
 			$('#size').val('');
 			$('#merk').val('');
@@ -654,7 +878,7 @@ $(document).ready(function(){
   		barisN++;
   		var split_po_type_attribute = po_type_attribute.split(',');
   		$('#looping_barang').append(
-  			'<div class="looping_barang" id="looping-'+barisN+'"><hr class="looping-item"><p><button type="button" name="remove" data-id="'+barisN+'" class="btn btn-danger btn_remove">Hapus</button></p><div class="form-group detail-'+barisN+'" style="display: none"><label for="detail">Detail: <span class="required">*</span></label><input type="text" class="form-control" name="data[detail][]" id="detail" value="" required></div><div class="form-group size-'+barisN+'" style="display: none"><label for="Size">Size: <span class="required">*</span></label><input type="number" class="form-control sizeval_'+barisN+'" name="data[size][]" id="size" value="" required></div><div class="form-group merk-'+barisN+'" style="display: none"><label for="merk">Merk: <span class="required">*</span></label><input type="text" class="form-control" name="data[merk][]" id="merk" required></div><div class="form-group type-'+barisN+'" style="display: none"><label for="type">Type: <span class="required">*</span></label><input type="text" class="form-control" name="data[type][]" id="type" required></div><div class="form-group core-'+barisN+'" style="display: none"><label for="core">Core: <span class="required">*</span></label><input type="text" class="form-control" name="data[core][]" id="core" required></div><div class="form-group gulungan-'+barisN+'" style="display: none"><label for="gulungan">Gulungan: <span class="required">*</span></label><input type="text" class="form-control" name="data[gulungan][]" id="gulungan" required></div><div class="form-group bahan-'+barisN+'" style="display: none"><label for="bahan">Bahan: <span class="required">*</span></label><input type="text" class="form-control" name="data[bahan][]" id="bahan" required></div><div class="form-group price_1"><label for="price_1">Price: <span class="required">*</span></label><input type="text" class="form-control price_1_looping-'+barisN+'" name="data[price_1][]" id="price_1" required></div><div class="form-group price_2-'+barisN+'" style="display: none"><label for="price_2">Price (Secondary): <span class="required">*</span> <em class="label label-success">Size x Price = Price (secondary)</em></label><div class="row"><div class="col-md-10"><input type="text" class="form-control price_2_looping-'+barisN+'" name="data[price_2][]" id="price_2" required></div><div class="col-md-2"><button type="button" class="btn btn-primary hitung_'+barisN+'">Hitung</button></div></div></div><div class="form-group qty"><label for="qty">Qty: <span class="required">*</span></label><input type="number" min="0" class="form-control" name="data[qty][]" id="qty" required></div><div class="form-group unit-'+barisN+'" style="display: none"><label for="unit">Unit: <span class="required">*</span></label><input type="text" class="form-control" name="data[unit][]" id="unit" required></div><script>$(document).ready(function(){	$(".price_1_looping-'+barisN+'").mask("0.000.000.000.000,00", {reverse: true});	$(".price_2_looping-'+barisN+'").mask("0.000.000.000.000,00", {reverse: true});$(document).on("click", ".hitung_'+barisN+'", function(e){ var ukuran_'+barisN+' = $(".sizeval_'+barisN+'").val();var harga_'+barisN+' = $(".price_1_looping-'+barisN+'").val().replace(/\\./g,"");$(".price_2_looping-'+barisN+'").val(parseInt(ukuran_'+barisN+' * harga_'+barisN+'.replace(/\\,/g,".")));});});</script></div>'
+  			'<div class="looping_barang" id="looping-'+barisN+'"><hr class="looping-item"><p><button type="button" name="remove" data-id="'+barisN+'" class="btn btn-danger btn_remove">Hapus</button></p><div class="form-group detail-'+barisN+'" style="display: none"><label for="detail">Detail: <span class="required">*</span></label><input type="text" class="form-control" name="data[detail][]" id="detail" value="" required></div><div class="form-group size-'+barisN+'" style="display: none"><label for="Size">Size: <span class="required">*</span></label><input type="number" class="form-control sizeval_'+barisN+'" name="data[size][]" id="size" value="" required></div><div class="form-group merk-'+barisN+'" style="display: none"><label for="merk">Merk: <span class="required">*</span></label><input type="text" class="form-control" name="data[merk][]" id="merk" required></div><div class="form-group type-'+barisN+'" style="display: none"><label for="type">Type: <span class="required">*</span></label><input type="text" class="form-control" name="data[type][]" id="type" required></div><div class="form-group core-'+barisN+'" style="display: none"><label for="core">Core: <span class="required">*</span></label><input type="text" class="form-control" name="data[core][]" id="core" required></div><div class="form-group gulungan-'+barisN+'" style="display: none"><label for="gulungan">Gulungan: <span class="required">*</span></label><input type="text" class="form-control" name="data[roll][]" id="gulungan" required></div><div class="form-group bahan-'+barisN+'" style="display: none"><label for="bahan">Bahan: <span class="required">*</span></label><input type="text" class="form-control" name="data[material][]" id="bahan" required></div><div class="form-group price_1"><label for="price_1">Price: <span class="required">*</span></label><input type="text" class="form-control price_1_looping-'+barisN+'" name="data[price_1][]" id="price_1" required></div><div class="form-group price_2-'+barisN+'" style="display: none"><label for="price_2">Price (Secondary): <span class="required">*</span> <em class="label label-success">Size x Price = Price (secondary)</em></label><div class="row"><div class="col-md-10"><input type="text" class="form-control price_2_looping-'+barisN+'" name="data[price_2][]" id="price_2" required></div><div class="col-md-2"><button type="button" class="btn btn-primary hitung_'+barisN+'">Hitung</button></div></div></div><div class="form-group qty"><label for="qty">Qty: <span class="required">*</span></label><input type="number" min="0" class="form-control" name="data[qty][]" id="qty" required></div><div class="form-group unit-'+barisN+'" style="display: none"><label for="unit">Unit: <span class="required">*</span></label><input type="text" class="form-control" name="data[unit][]" id="unit" required></div><script>$(document).ready(function(){	$(".price_1_looping-'+barisN+'").mask("0.000.000.000.000,00", {reverse: true});	$(".price_2_looping-'+barisN+'").mask("0.000.000.000.000,00", {reverse: true});$(document).on("click", ".hitung_'+barisN+'", function(e){ var ukuran_'+barisN+' = $(".sizeval_'+barisN+'").val();var harga_'+barisN+' = $(".price_1_looping-'+barisN+'").val().replace(/\\./g,"");$(".price_2_looping-'+barisN+'").val(parseInt(ukuran_'+barisN+' * harga_'+barisN+'.replace(/\\,/g,".")));});});</script></div>'
   		);
 
 		for(var x = 0; x < split_po_type_attribute.length; x++)
@@ -677,64 +901,107 @@ $(document).ready(function(){
     	hide_ipad_keyboard();
       	hide_lightbox();
       	show_loading_message();
-      	var Infos = $('#vendor').val();
-      	var form_data = $(IDForm).serialize();
-      	var request   = $.ajax({
-        	url:          pathFile+"?"+Act+"=add_"+sLug,
-        	cache:        false,
-        	data:         form_data,
-        	method: 	  'POST',
-      	});
+		
+		var formDataArray = $(this).serializeArray();
+		var formDataObject = {
+			items: []
+		};
+
+		var arr = [];
+		var dataGroups = {};
+		  
+		formDataArray.forEach(function(item) {
+			if (item.name.startsWith("data[")) {
+				var matches = item.name.match(/data\[([^\]]+)\]\[(\d*)\]/);
+				if (matches) {
+					let count = arr.reduce(function(accumulator, currentValue) {
+						return currentValue === matches[1] ? accumulator + 1 : accumulator;
+					}, 0);
+
+					var fieldName = matches[1];
+					var index = count;
+	
+					if (!dataGroups[index]) {
+						dataGroups[index] = {};
+					}
+	
+					var value = (fieldName === 'qty')? parseInt(item.value): item.value;
+					dataGroups[index][fieldName] = value;
+					arr.push(matches[1]);
+				}
+			} else {
+				var value = (item.name === 'companyid' || item.name === 'vendorid')? parseInt(item.value) : item.value; 
+				formDataObject[item.name] = value;
+			}
+		});
+	
+		for (var key in dataGroups) {
+			formDataObject.items.push(dataGroups[key]);
+		}
+
+		var request   = $.ajax({
+			url:          pathFile+"/purchase-order",
+			type:         'POST',
+			data:         JSON.stringify(formDataObject, null, 2),
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
+		 });
 
       	request.done(function(output){
-      		var obj = JSON.parse(output);
-	    	if (obj.result == sukses){
+			if(output.status == "success"){
 	    		$("#sortby").empty();
 	      		tablenya.ajax.reload(function(){
-	      			tablePrint.ajax.reload();
 	        		hide_loading_message();
+					var Infos = $('#vendor').val();
 	        		show_message("'"+Infos+"' berhasil dimasukan.", 'success');
 	        		$('#company').empty();
 	        		$('#po_type').empty();
+	        		$('.po_type').empty();
 	        		reset();
 	        		clean();
 	      		}, true);
 
-	      		$.ajax({
-          			url: pathFile+"?"+Act+"=sortdata_"+sLug,
-          			cache: false,
-          			dataType: 'json',
-          			contentType: 'application/json; charset=utf-8',
-          			type: 'get',
-          			success: function(output){
-          				if(output.result == sukses){
-          					for(var i = 0; i<output.data.length; i++){
-          						$("#sortby").append("<option value='"+output.data[i].montly+"' "+(getCookie("selectMonth") == output.data[i].montly ? 'selected' : '')+" >"+output.data[i].montly+"</option>");
-          					}
-          					setCookie("selectMonth", arsip, 1);
-          				} else {
-          					show_message('Gagal memuat data', 'error');
-          				}
+				$.ajax({
+					url: pathFile+"/sortdata/archive?data=po_date&from=po_customer",
+					type: "GET",
+					beforeSend: function (xhr) {
+						xhr.setRequestHeader('Authorization', getCookie('access_token'));
+						xhr.setRequestHeader('Content-Type', 'application/json');
+					},
+					success: function(output){
+						if(output.status == "success"){
+							for(var i=0; i<output.response.data[0].year.length; i++) {
+								$("#sortby").append("<option value='"+output.response.data[0].year[i]+"' data-name='year' "+(getCookie("startdate") == output.response.data[0].year[i] ? 'selected' : '')+" >Tahun: "+output.response.data[0].year[i]+"</option>");
+							}
+							
+							for(var i = 0; i<output.response.data[0].month.length; i++){
+								$("#sortby").append("<option value='"+output.response.data[0].month[i]+"' data-name='month' "+(getCookie("startdate") == output.response.data[0].month[i] ? 'selected' : '')+" >Bulan: "+output.response.data[0].month[i]+"</option>");
+							}
+							setCookie("report", report, 1);
+							setCookie("startdate", startdate, 1);
+				
+						} else {
+							show_message('Failed: sort data fetching.', 'error');
+						}
           			}
-          		});
+				});
 
-	    	} else if(obj.result == 'invalid'){
-	    		$('#company').empty();
-	    		$('#po_type').empty();
-	      		hide_loading_message();
-	      		show_message(obj.message+', silakan periksa dan coba kembali.', 'error');
 	    	} else {
 	    		$('#company').empty();
 	    		$('#po_type').empty();
+	    		$('.po_type').empty();
 	      		hide_loading_message();
-	      		show_message('Gagal memasukan data', 'error');
+	      		show_message('Failed: '+output.response.message, 'error');
 	    	}
 	  	});
 	  	request.fail(function(jqXHR, textStatus){
 	  		$('#company').empty();
 	  		$('#po_type').empty();
+	  		$('.po_type').empty();
 	    	hide_loading_message();
-	    	show_message('Gagal memasukan data: '+textStatus, 'error');
+	    	show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	  	});
   	});
 
@@ -742,24 +1009,24 @@ $(document).ready(function(){
   	// Edit Vendor
 	////////////////////
 
-	$(document).on('click', '.UbahVendor a', function(e){
+	$(document).on('click', '.UbahVendor', function(e){
 		e.preventDefault();
 	    show_loading_message();
 	    $('.ppns').show();
 	    $('#company').empty();
-	    $('#po_type').empty();
+		$('.saving').text('Simpan');
 	    document.getElementById("po_type").disabled = true;
-	    var id      = $(this).data('id');
+		var id      = $(this).data('id');
 	    var request = $.ajax({
-	    	url:          pathFile+"?"+Act+"=get_vendor_"+sLug,
-	      	cache:        false,
-	      	data:         'id='+id,
-	      	dataType:     'json',
-	      	contentType:  'application/json; charset=utf-8',
-	      	type:         'get'
+	    	url:          pathFile+"/purchase-order/vendor/"+id,
+			type:         'GET',
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
 	    });
 	    request.done(function(output){
-	    	if (output.result == sukses){
+	    	if(output.status == "success"){
 	        	hide_loading_message();
 	        	show_lightbox();
 	    		$('h2.FormTitle').text('UBAH '+FormsLug);
@@ -770,21 +1037,21 @@ $(document).ready(function(){
 	        	$('#company').append('<option selected disabled>Pilih Tipe</option>');
 	        	for(var x = 0; x<companyJSON.length; x++)
 	        	{
-	        		$('#company').append('<option value="'+companyJSON[x].id+'" '+(companyJSON[x].id == output.data[0].id_company ? 'selected':'')+'>'+companyJSON[x].company+'</option>');
+	        		$('#company').append('<option value="'+companyJSON[x].id+'" '+(companyJSON[x].id == output.response.data[0].companyid ? 'selected':'')+'>'+companyJSON[x].companyname+'</option>');
 	        	}
 
 	        	$('#po_type').append('<option value="" selected disabled>Pilih Tipe</option>');
 				for(var z = 0; z < po_typeJSON.length; z++)	
 				{
-					$('#po_type').append('<option value="'+po_typeJSON[z].id+'">' +po_typeJSON[z].item+ '</option>');
+					$('#po_type').append('<option value="'+po_typeJSON[z].id+'" '+ (po_typeJSON[z].id == output.response.data[0].po_type ? 'selected' : '' ) +'>' +po_typeJSON[z].item+ '</option>');
 				}
 
-	        	$('#vendor').val(output.data[0].vendor);
-	        	$('#id_vendor').val(output.data[0].id_vendor);
-		        $('#po_date').val(output.data[0].po_date);
-	        	$('#po_type').val(output.data[0].po_type);
-		        $('#ppns').val(output.data[0].ppn);
-		        $('#note').val(output.data[0].note);
+	        	$('#vendor').val(output.response.data[0].vendor);
+	        	$('#id_vendor').val(output.response.data[0].vendorid);
+		        $('#po_date').val(output.response.data[0].po_date);
+	        	$('.po_type').val(output.response.data[0].po_type);
+		        $('#ppns').val(output.response.data[0].tax);
+		        $('#note').val(output.response.data[0].note);
 		        $('.header-item').hide();
 		        $('.footer-item').hide();
 		        $('.tambah_barang').hide();
@@ -834,26 +1101,25 @@ $(document).ready(function(){
 
 			  	$('#vendor').catcomplete({
 			  		minLength: 2,
-			  		source: function(request, respone)
+			  		source: function(request, response)
 			  		{
-			  			$.ajax({
-			  				url: '../auth/json.php',
-			  				dataType: 'json',
-			  				type: 'GET',
-			  				data: {
-			  					req: 'vendor',
-			  					keyword: request.term
-			  				},
-			  				success: function(data)
-			  				{
-			  					respone(data);
-			  				}
-			  			});
+						$.ajax({
+							url: pathFile+"/purchase-order/suggest/vendor?keyword="+request.term,
+							type: "GET",
+							beforeSend: function (xhr) {
+								xhr.setRequestHeader('Authorization', getCookie('access_token'));
+								xhr.setRequestHeader('Content-Type', 'application/json');
+							},
+							success: function(output)
+							  {
+								  response(output.response.data);
+							  }
+						});
 			  		},
 			  		select: function(event, ui)
 			  		{
 			  			$('#vendor').val(ui.item.category);
-			  			$('#id_vendor').val(ui.item.id_vendor);
+			  			$('#id_vendor').val(ui.item.vendorid);
 			  		}
 			  	});
 
@@ -863,12 +1129,12 @@ $(document).ready(function(){
 
 	      	} else {
 	        	hide_loading_message();
-	        	show_message('Gagal mengambil data', 'error');
+	        	show_message('Failed: '+output.response.message, 'error');
 	      	}
 	    });
 	    request.fail(function(jqXHR, textStatus){
 	    	hide_loading_message();
-	      	show_message('Gagal mengambil data: '+textStatus, 'error');
+			show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	    });
 	});
 
@@ -882,36 +1148,47 @@ $(document).ready(function(){
       		hide_ipad_keyboard();
       		hide_lightbox();
       		show_loading_message();
-      		var Infos = $('#vendor').val();
-      		var id        = $(IDForm).attr('data-id');
-      		var form_data = $(IDForm).serialize();
-      		var request   = $.ajax({
-        		url:          pathFile+"?"+Act+"=edit_vendor_"+sLug+"&id="+id,
-        		cache:        false,
-        		data:         form_data,
-        		dataType:     'json',
-        		contentType:  'application/json; charset=utf-8',
-        		type:         'get'
+      		var form_data 	= $(IDForm).serializeArray();
+      		var id			= $(IDForm).attr('data-id');
+
+      		var jsonData = {};
+			$.each(form_data, function(){
+				if(this.name == 'companyid' || this.name == 'vendorid') {
+					value = parseInt(this.value)
+				} else {
+					value = this.value
+				}
+				jsonData[this.name] = value;
+			});
+			
+			jsonData.po_id = parseInt(id);
+
+			var request   = $.ajax({
+				url:          pathFile+"/purchase-order/vendor",
+				type:         'PUT',
+				data:         JSON.stringify(jsonData),
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
      		});
+
       		request.done(function(output){
-        		if (output.result == sukses){
+        		if(output.status == "success"){
           			tablenya.ajax.reload(function(){
-          				tablePrint.ajax.reload();
             			hide_loading_message();
-            			show_message("'"+Infos+"' berhasil diubah.", 'success');
+            			var Infos = $('#vendor').val();
+						show_message("'"+Infos+"' update successfully.", 'success');
           				reset(); clean();
           			}, true);
-        		} else if(output.result == 'invalid'){
-		      		hide_loading_message();
-		      		show_message(output.message+', silakan periksa dan coba kembali.', 'error');
-		    	} else {
+        		} else {
           			hide_loading_message();
-          			show_message('Gagal diubah', 'error');
+          			show_message('Failed: '+output.response.message, 'error');
         		}
       		});
      		request.fail(function(jqXHR, textStatus){
         		hide_loading_message();
-        		show_message('Gagal diubah: '+textStatus, 'error');
+        		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
       		});
     	}
   	});
@@ -920,42 +1197,51 @@ $(document).ready(function(){
   	// Edit Item 
 	/////////////////////////////////////////
 
-	$(document).on('click', '.UbahItem a', function(e){
+	$(document).on('click', '.UbahItem', function(e){
 		e.preventDefault();
 	    show_loading_message();
-	    var id      = $(this).data('id');
-	    var request = $.ajax({
-	    	url:          pathFile+"?"+Act+"=get_item_"+sLug,
-	      	cache:        false,
-	      	data:         'id='+id,
-	      	dataType:     'json',
-	      	contentType:  'application/json; charset=utf-8',
-	      	type:         'get'
-	    });
+		var form_data 	= $(IDForm).serializeArray();
+		var id			= $(this).data('id');
+
+		var jsonData = {};
+		$.each(form_data, function(){
+			jsonData[this.name] = this.value;
+		});
+
+		var request = $.ajax({
+			url:          pathFile+"/purchase-order/item/"+id,
+			type:         'GET',
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
+		 });
+
 	    request.done(function(output){
-	    	if (output.result == sukses){
+	    	if(output.status == "success"){
 	    		$('h2.FormTitle').text('UBAH ITEM '+FormsLug);
 	        	$(IDForm).attr('class', 'form edit_item');
 	        	$(IDForm).attr('data-id', id);
 	        	$(IDForm +' .field_container label.error').hide();
-		        $('#detail').val(output.data.value[0].detail);
-				$('#size').val(output.data.value[0].size);
-				$('#merk').val(output.data.value[0].merk);
-				$('#type').val(output.data.value[0].type);
-				$('#core').val(output.data.value[0].core);
-				$('#gulungan').val(output.data.value[0].gulungan);
-				$('#bahan').val(output.data.value[0].bahan);
-				$('#price_1').val(output.data.value[0].price_1);
-				$('#price_2').val(output.data.value[0].price_2);
-				$('#qty').val(output.data.value[0].qty);
-				$('#unit').val(output.data.value[0].unit);
+				$('.saving').text('Simpan');
+		        $('#detail').val(output.response.data[0].detail);
+				$('#size').val(output.response.data[0].size);
+				$('#merk').val(output.response.data[0].merk);
+				$('#type').val(output.response.data[0].type);
+				$('#core').val(output.response.data[0].core);
+				$('#gulungan').val(output.response.data[0].roll);
+				$('#bahan').val(output.response.data[0].material);
+				$('#price_1').val(output.response.data[0].price_1);
+				$('#price_2').val(output.response.data[0].price_2);
+				$('#qty').val(output.response.data[0].qty);
+				$('#unit').val(output.response.data[0].unit);
 				$('#detail').attr('name','detail');
 		        $('#size').attr('name','size');
 		        $('#merk').attr('name','merk');
 		        $('#type').attr('name','type');
 		        $('#core').attr('name','core');
-		        $('#gulungan').attr('name','gulungan');
-		        $('#bahan').attr('name','bahan');
+		        $('#gulungan').attr('name','roll');
+		        $('#bahan').attr('name','material');
 		        $('#price_1').attr('name','price_1');
 		        $('#price_2').attr('name','price_2');
 		        $('#qty').attr('name','qty');
@@ -970,7 +1256,7 @@ $(document).ready(function(){
 		        $('.ppns').hide();
 		        $('.note').hide();
 
-		        var split_input = output.data.input[0].attribute.split(',');
+		        var split_input = output.response.data[0].inputattr.split(',');
 		        for(var i = 0; i < split_input.length; i++)
 		        {
 		        	$('.'+split_input[i]).show();
@@ -980,12 +1266,12 @@ $(document).ready(function(){
 	        	show_lightbox();
 	      	} else {
 	        	hide_loading_message();
-	        	show_message('Gagal mengambil data', 'error');
+	        	show_message('Failed: '+output.response.message, 'error');
 	      	}
 	    });
 	    request.fail(function(jqXHR, textStatus){
 	    	hide_loading_message();
-	      	show_message('Gagal mengambil data: '+textStatus, 'error');
+			show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	    });
 	});
 
@@ -1000,34 +1286,48 @@ $(document).ready(function(){
       		hide_ipad_keyboard();
       		hide_lightbox();
       		show_loading_message();
-      		var id        = $(IDForm).attr('data-id');
-      		var form_data = $(IDForm).serialize();
-      		var request   = $.ajax({
-        		url:          pathFile+"?"+Act+"=edit_item_"+sLug+"&id="+id,
-        		cache:        false,
-        		data:         form_data,
-        		dataType:     'json',
-        		contentType:  'application/json; charset=utf-8',
-        		type:         'get'
+			var form_data 	= $(IDForm).serializeArray();
+      		var id			= $(IDForm).attr('data-id');
+
+      		var jsonData = {};
+			$.each(form_data, function(){
+				if(this.name == "qty") {
+					value = parseInt(this.value);
+				} else {
+					value = this.value;
+				}
+				jsonData[this.name] = value;
+			});
+
+			jsonData.itemid = parseInt(id);
+
+			var request   = $.ajax({
+				url:          pathFile+"/purchase-order/item",
+				type:         'PUT',
+				data:         JSON.stringify(jsonData),
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
      		});
+
       		request.done(function(output){
-        		if (output.result == sukses){
+        		if(output.status == "success"){
           			tablenya.ajax.reload(function(){
-          				tablePrint.ajax.reload();
             			hide_loading_message();
-            			show_message("Berhasil diubah.", 'success');
+            			show_message("Update sucessfully.", 'success');
             			reset(); clean();
           			}, true);
         		} else {
         			reset(); clean();
           			hide_loading_message();
-          			show_message('Gagal diubah', 'error');
+          			show_message('Failed: '+output.response.message, 'error');
         		}
       		});
      		request.fail(function(jqXHR, textStatus){
      			reset(); clean();
         		hide_loading_message();
-        		show_message('Gagal diubah: '+textStatus, 'error');
+        		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
       		});
     	}
   	});
@@ -1036,36 +1336,36 @@ $(document).ready(function(){
   	// Delete item button
   	////////////////////////////////////
 
-  	$(document).on('click', '.HapusItem a', function(e){
+  	$(document).on('click', '.HapusItem', function(e){
 	    e.preventDefault();
-	    var Infos = $(this).data('name');
-	    if (confirm("Anda yakin ingin menghapus '"+Infos+"'?")){
+		var Infos = $(this).data('name');
+		if (confirm("Anda yakin ingin menghapus '"+Infos+"'?")){
 	    	show_loading_message();
-	      	var id      = $(this).data('id');
-	      	var request = $.ajax({
-	        	url:          pathFile+"?"+Act+"=del_"+sLug+"&id="+id,
-	        	cache:        false,
-	        	dataType:     'json',
-	        	contentType:  'application/json; charset=utf-8',
-	        	type:         'get'
-	      	});
+			var id      = $(this).data('id');
+			var request = $.ajax({
+				url:          pathFile+"/purchase-order/item/"+id,
+				type:         'DELETE',
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
+			});
 	      	
 	      	request.done(function(output){
-	        	if (output.result == sukses){
+	        	if(output.status == "success"){
 	          		tablenya.ajax.reload(function(){
-	          			tablePrint.ajax.reload();
-	            		hide_loading_message();
-	            		show_message("'"+Infos+"' berhasil dihapus.", 'success');
+						hide_loading_message();
+	            		show_message("'"+Infos+"' delete successfully.", 'success');
 	          		}, true);
 	        	} else {
 	          		hide_loading_message();
-	          		show_message('Gagal menghapus', 'error');
+	          		show_message('Failed: '+output.response.message, 'error');
 	       		}
 	      	});
 	      	
 	      	request.fail(function(jqXHR, textStatus){
 	        	hide_loading_message();
-	        	show_message('Gagal menghapus: '+textStatus, 'error');
+	        	show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	      	});
 	      }
   	});
@@ -1074,58 +1374,60 @@ $(document).ready(function(){
   	// Print view button
 	////////////////////////////////////////
 
-	$(document).on('click', '.PrintView a', function(e){
+	$(document).on('click', '.PrintView', function(e){
 		e.preventDefault();
 	    show_loading_message();
 	    reset();
-	    var id      = $(this).data('id');
+		var id      = $(this).data('id');
 	    var request = $.ajax({
-	    	url:          pathFile+"?"+Act+"=get_print_"+sLug,
-	      	cache:        false,
-	      	data:         'id='+id,
-	      	dataType:     'json',
-	      	contentType:  'application/json; charset=utf-8',
-	      	type:         'get'
+	    	url:          pathFile+"/purchase-order/printview/"+id,
+			type:         'GET',
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
 	    });
 	    request.done(function(output){
-	    	if (output.result == sukses){
-	    		$('h2.FormTitle').text('PRATINJAU PRINT '+output.data.value[0].po_type);
+	    	if(output.status == "success"){
+	    		$('h2.FormTitle').text('PRATINJAU PRINT '+output.response.data[0].po_type);
 	        	$(IDForm+' .field_container label.error').hide();
 	        	$(IDForm).attr('data-id', id);
 	        	$(IDForm).attr('class', 'form printProses');
+	        	$('.saving').text('Print');
 	        	$('.company').hide();
 	        	$('.po_type').hide();
 	        	$('.tambah_barang').hide();
 	        	$('.address').show();
 	        	$('.tanda_tangan').show();
-	        	$('#vendor').val(output.data.value[0].vendor);
-		        $('#po_date').val(output.data.value[0].po_date);
-		        $('#ppns').val(output.data.value[0].ppn);
-		        $('#note').val(output.data.value[0].note);
-		        $('#address').val(output.data.value[0].address);
-		        $('#tanda_tangan').val(output.data.value[0].ttd);
+	        	$('#vendor').val(output.response.data[0].vendor);
+		        $('#po_date').val(output.response.data[0].po_date);
+		        $('#ppns').val(output.response.data[0].tax);
+		        $('#note').val(output.response.data[0].note);
+		        $('#address').val(output.response.data[0].vendor_address);
+		        $('#tanda_tangan').val(output.response.data[0].ttd);
 		        $('#vendor').attr('readonly', true);
 		        $('#po_date').attr('readonly', true);
 		        $('#ppns').attr('readonly', true);
 		        $('#note').attr('readonly', true);
 		        $('#address').attr('readonly', true);
 
-		        var split_input = output.data.input[0].attribute.split(',');
-		        for(var x = 0; x < output.data.value.length; x++)
+		        for(var x = 0; x < output.response.data[0].items.length; x++)
 		        {
 		        	if(parseInt(x) === 0)
 					{
-						$('#detail').val(output.data.value[x].detail);
-						$('#size').val(output.data.value[x].size);
-						$('#merk').val(output.data.value[x].merk);
-						$('#type').val(output.data.value[x].type);
-						$('#core').val(output.data.value[x].core);
-						$('#gulungan').val(output.data.value[x].gulungan);
-						$('#bahan').val(output.data.value[x].bahan);
-						$('#price_1').val(output.data.value[x].price_1);
-						$('#price_2').val(output.data.value[x].price_2);
-						$('#qty').val(output.data.value[x].qty);
-						$('#unit').val(output.data.value[x].unit);
+						$('#detail').val(output.response.data[0].items[x].detail);
+						$('#size').val(output.response.data[0].items[x].size);
+						$('#merk').val(output.response.data[0].items[x].merk);
+						$('#type').val(output.response.data[0].items[x].type);
+						$('#core').val(output.response.data[0].items[x].core);
+						$('#gulungan').val(output.response.data[0].items[x].roll);
+						$('#bahan').val(output.response.data[0].items[x].material);
+						$('#price_1').val(output.response.data[0].items[x].price_1);
+						$('#price_2').val(output.response.data[0].items[x].price_2);
+						$('#qty').val(output.response.data[0].items[x].qty);
+						$('#unit').val(output.response.data[0].items[x].unit);
+						
+						split_input = output.response.data[0].items[x].inputattr.split(",");
 						for(var i = 0; i < split_input.length; i++)
 	  					{
 	  						$('.'+split_input[i]).show();
@@ -1147,9 +1449,10 @@ $(document).ready(function(){
 					} else {
 						loopN++;
 						$('#looping_barang').append(
-							'<div class="looping_barang" id="looping-'+loopN+'"><hr><div class="form-group detail-'+loopN+'" style="display: none"><label for="detail">Detail: <span class="required">*</span></label><input type="text" class="form-control" name="data[detail][]" id="detail-'+loopN+'" value="'+output.data.value[x].detail+'" required></div><div class="form-group size-'+loopN+'" style="display: none"><label for="Size">Size: <span class="required">*</span></label><input type="number" class="form-control sizeval_'+loopN+'" name="data[size][]" id="size-'+loopN+'" value="'+output.data.value[x].size+'" required></div><div class="form-group merk-'+loopN+'" style="display: none"><label for="merk">Merk: <span class="required">*</span></label><input type="text" class="form-control" name="data[merk][]" id="merk-'+loopN+'" value="'+output.data.value[x].merk+'" required></div><div class="form-group type-'+loopN+'" style="display: none"><label for="type">Type: <span class="required">*</span></label><input type="text" class="form-control" name="data[type][]" id="type-'+loopN+'" value="'+output.data.value[x].type+'" required></div><div class="form-group core-'+loopN+'" style="display: none"><label for="core">Core: <span class="required">*</span></label><input type="text" class="form-control" name="data[core][]" id="core-'+loopN+'" value="'+output.data.value[x].core+'" required></div><div class="form-group gulungan-'+loopN+'" style="display: none"><label for="gulungan">Gulungan: <span class="required">*</span></label><input type="text" class="form-control" name="data[gulungan][]" id="gulungan-'+loopN+'" value="'+output.data.value[x].gulungan+'" required></div><div class="form-group bahan-'+loopN+'" style="display: none"><label for="bahan">Bahan: <span class="required">*</span></label><input type="text" class="form-control" name="data[bahan][]" id="bahan-'+loopN+'" value="'+output.data.value[x].bahan+'" required></div><div class="form-group price_1"><label for="price_1">Price: <span class="required">*</span></label><input type="text" class="form-control price_1_looping-'+loopN+'" name="data[price_1][]" id="price_1-'+loopN+'" value="'+output.data.value[x].price_1+'" required></div><div class="form-group price_2-'+loopN+'" style="display: none"><label for="price_2">Price (Secondary): <span class="required">*</span> <em class="label label-success">Size x Price = Price (secondary)</em></label><div class="row"><div class="col-md-10"><input type="text" class="form-control price_2_looping-'+loopN+'" name="data[price_2][]" id="price_2-'+loopN+'" value="'+output.data.value[x].price_2+'" required></div><div class="col-md-2"><button type="button" class="btn btn-primary hitung_'+loopN+'">Hitung</button></div></div></div><div class="form-group qty"><label for="qty">Qty: <span class="required">*</span></label><input type="number" min="0" class="form-control" name="data[qty][]" id="qty-'+loopN+'" value="'+output.data.value[x].qty+'" required></div><div class="form-group unit-'+loopN+'" style="display: none"><label for="unit">Unit: <span class="required">*</span></label><input type="text" class="form-control" name="data[unit][]" id="unit-'+loopN+'" value="'+output.data.value[x].unit+'" required></div><script>$(document).ready(function(){ $(".price_1_looping-'+loopN+'").mask("0.000.000.000.000,00", {reverse: true});$(".price_2_looping-'+loopN+'").mask("0.000.000.000.000,00", {reverse: true});$(document).on("click", ".hitung_'+loopN+'", function(e){ var ukuran_'+loopN+' = $(".sizeval_'+loopN+'").val();var harga_'+loopN+' = $(".price_1_looping-'+loopN+'").val().replace(/\\./g,"");$(".price_2_looping-'+loopN+'").val(parseInt(ukuran_'+loopN+' * harga_'+loopN+'.replace(/\\,/g,".")));});});</script></div>'
+							'<div class="looping_barang" id="looping-'+loopN+'"><hr><div class="form-group detail-'+loopN+'" style="display: none"><label for="detail">Detail: <span class="required">*</span></label><input type="text" class="form-control" name="data[detail][]" id="detail-'+loopN+'" value="'+output.response.data[0].items[x].detail+'" required></div><div class="form-group size-'+loopN+'" style="display: none"><label for="Size">Size: <span class="required">*</span></label><input type="number" class="form-control sizeval_'+loopN+'" name="data[size][]" id="size-'+loopN+'" value="'+output.response.data[0].items[x].size+'" required></div><div class="form-group merk-'+loopN+'" style="display: none"><label for="merk">Merk: <span class="required">*</span></label><input type="text" class="form-control" name="data[merk][]" id="merk-'+loopN+'" value="'+output.response.data[0].items[x].merk+'" required></div><div class="form-group type-'+loopN+'" style="display: none"><label for="type">Type: <span class="required">*</span></label><input type="text" class="form-control" name="data[type][]" id="type-'+loopN+'" value="'+output.response.data[0].items[x].type+'" required></div><div class="form-group core-'+loopN+'" style="display: none"><label for="core">Core: <span class="required">*</span></label><input type="text" class="form-control" name="data[core][]" id="core-'+loopN+'" value="'+output.response.data[0].items[x].core+'" required></div><div class="form-group gulungan-'+loopN+'" style="display: none"><label for="gulungan">Gulungan: <span class="required">*</span></label><input type="text" class="form-control" name="data[roll][]" id="gulungan-'+loopN+'" value="'+output.response.data[0].items[x].roll+'" required></div><div class="form-group bahan-'+loopN+'" style="display: none"><label for="bahan">Bahan: <span class="required">*</span></label><input type="text" class="form-control" name="data[material][]" id="bahan-'+loopN+'" value="'+output.response.data[0].items[x].material+'" required></div><div class="form-group price_1"><label for="price_1">Price: <span class="required">*</span></label><input type="text" class="form-control price_1_looping-'+loopN+'" name="data[price_1][]" id="price_1-'+loopN+'" value="'+output.response.data[0].items[x].price_1+'" required></div><div class="form-group price_2-'+loopN+'" style="display: none"><label for="price_2">Price (Secondary): <span class="required">*</span> <em class="label label-success">Size x Price = Price (secondary)</em></label><div class="row"><div class="col-md-10"><input type="text" class="form-control price_2_looping-'+loopN+'" name="data[price_2][]" id="price_2-'+loopN+'" value="'+output.response.data[0].items[x].price_2+'" required></div><div class="col-md-2"><button type="button" class="btn btn-primary hitung_'+loopN+'">Hitung</button></div></div></div><div class="form-group qty"><label for="qty">Qty: <span class="required">*</span></label><input type="number" min="0" class="form-control" name="data[qty][]" id="qty-'+loopN+'" value="'+output.response.data[0].items[x].qty+'" required></div><div class="form-group unit-'+loopN+'" style="display: none"><label for="unit">Unit: <span class="required">*</span></label><input type="text" class="form-control" name="data[unit][]" id="unit-'+loopN+'" value="'+output.response.data[0].items[x].unit+'" required></div><script>$(document).ready(function(){ $(".price_1_looping-'+loopN+'").mask("0.000.000.000.000,00", {reverse: true});$(".price_2_looping-'+loopN+'").mask("0.000.000.000.000,00", {reverse: true});$(document).on("click", ".hitung_'+loopN+'", function(e){ var ukuran_'+loopN+' = $(".sizeval_'+loopN+'").val();var harga_'+loopN+' = $(".price_1_looping-'+loopN+'").val().replace(/\\./g,"");$(".price_2_looping-'+loopN+'").val(parseInt(ukuran_'+loopN+' * harga_'+loopN+'.replace(/\\,/g,".")));});});</script></div>'
 						);
 
+						split_input = output.response.data[0].items[x].inputattr.split(",");
 						for(var i = 0; i < split_input.length; i++)
 	  					{
 	  						$('.'+split_input[i]+'-'+loopN).show();
@@ -1168,7 +1471,6 @@ $(document).ready(function(){
 						$('#qty-'+loopN).attr('readonly', true);
 						$('#unit-'+loopN).attr('readonly', true);
 						$(".hitung_"+loopN).hide();
-
 					}
 		        }
 
@@ -1176,12 +1478,12 @@ $(document).ready(function(){
 	        	hide_loading_message();
 	      	} else {
 	        	hide_loading_message();
-	        	show_message('Gagal mengambil data', 'error');
+	        	show_message('Failed: '+output.response.message, 'error');
 	      	}
 	    });
 	    request.fail(function(jqXHR, textStatus){
 	    	hide_loading_message();
-	      	show_message('Gagal mengambil data: '+textStatus, 'error');
+			show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	    });
 	});
 	
@@ -1197,16 +1499,18 @@ $(document).ready(function(){
 	      	show_loading_message();
 	      	var id 			= $('.printProses').attr('data-id');
 	      	var form_data 	= $('.printProses').serialize();
-	      	$.ajax({
-	        	url: 	pathFile+"?"+Act+"=print&id="+id,
-	        	cache:  false,
-	        	data:   form_data,
-	        	type: 'POST',
-	        	success: function(respon){
-	        		var obj = JSON.parse(respon);
-	        		if(obj.result == 'success'){
+			
+			$.ajax({
+				url:	pathFile+"/purchase-order/printnow/"+id,
+				type:	'GET',
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				},
+				success: function(output){
+	        		if(output.status == "success"){
 	        			hide_loading_message();
-	        			var split_print = obj.data.print[0].attribute.split(',');
+	        			var split_print = output.response.data[0].printattr.split(',');
         				var thead = '';
 	        			$('.thead').append('<th class="text-center">NO</th>');
 	        			for(var i = 0; i < split_print.length; i++)
@@ -1225,28 +1529,27 @@ $(document).ready(function(){
 	        			}
 	        			$('.thead').append('<th class="text-center">TOTAL</th>');
 
-	        			var itemnya = obj.data.value[0].item_to;
-
+	        			var itemnya = output.response.data[0].items;
 	        			for(var x = 0; x < itemnya.length; x++)
 	        			{
 	        				$('.tbody').append('<tr class="tbody-value-'+x+'"></tr>');
 	        				$('.tbody-value-'+x).append('<td class="text-center">'+parseInt( x + 1)+'</td>');
 
-	        				for(var z = 0; z < split_print.length; z++)
-	        				{
-	        					if(split_print[z] === 'detail' || split_print[z] === 'merk')
+							for(var z = 0; z < split_print.length; z++) 
+							{
+								if(split_print[z] === 'detail' || split_print[z] === 'merk')
 	        					{
-	        						$('.tbody-value-'+x).append('<td class="text-left">'+obj.data.value[0][split_print[z]][x] +'</td>');
+	        						$('.tbody-value-'+x).append('<td class="text-left">'+itemnya[x][split_print[z]] +'</td>');
 	        					} else if(split_print[z] === 'price_1'){
-	        						$('.tbody-value-'+x).append('<td class="text-center">'+convertToRupiah(obj.data.value[0][split_print[z]][x])+'</td>');
+	        						$('.tbody-value-'+x).append('<td class="text-center">'+convertToRupiah(itemnya[x][split_print[z]])+'</td>');
 	        					} else if(split_print[z] === 'price_2'){
-	        						$('.tbody-value-'+x).append('<td class="text-center">'+convertToRupiah(obj.data.value[0][split_print[z]][x])+'</td>');
+	        						$('.tbody-value-'+x).append('<td class="text-center">'+convertToRupiah(itemnya[x][split_print[z]])+'</td>');
 	        					} else {
-	        						$('.tbody-value-'+x).append('<td class="text-center">'+obj.data.value[0][split_print[z]][x] +'</td>');
+	        						$('.tbody-value-'+x).append('<td class="text-center">'+ itemnya[x][split_print[z]] +'</td>');
 	        					}
 	        				}
 
-	        				$('.tbody-value-'+x).append('<td class="text-right">'+convertToRupiah(obj.data.value[0].ttl_price_item[x])+'</td>');	        				
+	        				$('.tbody-value-'+x).append('<td class="text-right">'+convertToRupiah(itemnya[x].subtotal)+'</td>');	        				
 	        			}
 
 	        			$('.tfoot-heading').append('<th colspan="'+parseInt(split_print.length + 2)+'">ADDITIONAL NOTES</th>');
@@ -1254,21 +1557,21 @@ $(document).ready(function(){
 	        			$('.tfoot-value2').append('<th>TAX</th><th class="pajak text-right"></th>');
 	        			$('.tfoot-value3').append('<th>TOTAL</th><th class="jumlah text-right"></th>');
 	        			$('#PrintModal').show();
-	        			$('.tgl_po').text('DATE : '+obj.data.value[0].po_date);
-	        			$('.penjual').text('VENDOR NAME : '+obj.data.value[0].vendor);
-	        			$('.nomor').text('NO PO : '+obj.data.value[0].nopo);
-	        			$('.alamat').text('ADDRESS : '+obj.data.value[0].address);
-	        			$('.notes').text(obj.data.value[0].note);
-	        			$('.ttd_tgl').text('Depok, '+obj.data.value[0].tgl);
-	        			$('.ttd_person').text('( '+obj.data.value[0].ttd+' )');
-	        			$('.subtotal').text(convertToRupiah(obj.data.value[0].subtotal));
-	        			$('.pajak').text(convertToRupiah(obj.data.value[0].tax));
-	        			$('.jumlah').text(convertToRupiah(obj.data.value[0].total));
-	        			$('.company_surat strong').text(obj.data.value[0].company);
-	        			$('.alamat_surat').text(obj.data.value[0].alamat);
-	        			$('.telp_surat').text('Telp : '+obj.data.value[0].phone+', Email '+obj.data.value[0].email);
-		        		if(!!obj.data.value[0].logo.length){
-	        				$('.logo_surat').append('<img src="'+obj.data.value[0].logo+'" height="75px" width="150px" class="center-block">');
+	        			$('.tgl_po').text('DATE : '+output.response.data[0].po_date);
+	        			$('.penjual').text('VENDOR NAME : '+output.response.data[0].vendor);
+	        			$('.nomor').text('NO PO : '+output.response.data[0].po_number);
+	        			$('.alamat').text('ADDRESS : '+output.response.data[0].vendor_address);
+	        			$('.notes').text(output.response.data[0].note);
+	        			$('.ttd_tgl').text('Depok, '+output.response.data[0].print_date);
+	        			$('.ttd_person').text('( '+output.response.data[0].ttd+' )');
+	        			$('.subtotal').text(convertToRupiah(output.response.data[0].subtotal));
+	        			$('.pajak').text(convertToRupiah(output.response.data[0].taxtotal));
+	        			$('.jumlah').text(convertToRupiah(output.response.data[0].total));
+	        			$('.company_surat strong').text(output.response.data[0].companyname);
+	        			$('.alamat_surat').text(output.response.data[0].companyaddress);
+	        			$('.telp_surat').text('Telp : '+output.response.data[0].companyphone+', Email '+output.response.data[0].companyemail);
+		        		if(!!output.response.data[0].companylogo.length){
+	        				$('.logo_surat').append('<img src="'+output.response.data[0].companylogo+'" height="75px" width="150px" class="center-block">');
 	        			}
 
 		        		$('.printnow').print({
@@ -1283,13 +1586,13 @@ $(document).ready(function(){
 
 	        		} else {
 	        			hide_loading_message();
-	      				show_message('Print gagal.', 'error');
+						show_message('Failed: '+output.response.message, 'error');
 	        		}
 	        	},
 		        error: function(jqXHR, textStatus, errorThrown){
-		            show_message('Print gagal: '+textStatus, 'error');
+					show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 		        }
-	      	});
+			});
 	    }
   	});
 
@@ -1302,25 +1605,56 @@ $(document).ready(function(){
     	reset();
         $('.tambah_barang').show();
     	var id = $(this).val();
-    	if(id)
-    	{
+    	if(id) {
 	    	$.ajax({
-	    		url : "../auth/json.php",
-				dataType: "JSON",
-				type : "GET",
-				contentType: "application/json; charset=utf-8",
-				cache: false,
-				data: {
-					req: 'po_attribute',
-					id: id
+				url: pathFile+"/purchase-order/suggest/attr?id="+id,
+				type: "GET",
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
 				},
 				success: function(output){
-					po_type_attribute = output[0].field;
-					var split_po_type_attribute = output[0].field.split(',');
+					po_type_attribute = output.response.data.field;
+					split_po_type_attribute = output.response.data.field.split(',');
 					for(var x = 0; x < split_po_type_attribute.length; x++)
-					{
 						$('.'+split_po_type_attribute[x]).show();
-					}
+				}
+	    	});
+    	}
+    });
+
+	$(document).on('change', '#po_type_add_item', function(e){
+    	e.preventDefault();
+		$('#po_type_add_item').attr('id', 'po_type');
+		reset();
+		$('#po_type').attr('id', 'po_type_add_item');
+		$('.po_number').show();
+		$('.company').hide();
+		$('#company').val('');
+		$('.vendor').hide();
+		$('#vendor').val('');
+		$('.po_date').hide();
+		$('#po_date').val('');
+		$('.note').hide();
+		$('#note').val('');
+		$('.ppns').hide();
+		$('#tax').val('');
+		$('#looping_barang').empty();
+        $('.tambah_barang').show();
+    	var id = $(this).val();
+    	if(id) {
+	    	$.ajax({
+				url: pathFile+"/purchase-order/suggest/attr?id="+id,
+				type: "GET",
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				},
+				success: function(output){
+					po_type_attribute = output.response.data.field;
+					split_po_type_attribute = output.response.data.field.split(',');
+					for(var x = 0; x < split_po_type_attribute.length; x++)
+						$('.'+split_po_type_attribute[x]).show();
 				}
 	    	});
     	}

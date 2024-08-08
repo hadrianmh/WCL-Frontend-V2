@@ -1,3 +1,16 @@
+// Function to get a cookie value by name
+function getCookie(name) {
+	var nameEQ = name + "=";
+	var cookies = document.cookie.split(';');
+	for (var i = 0; i < cookies.length; i++) {
+		var cookie = cookies[i].trim();
+		if (cookie.indexOf(nameEQ) === 0) {
+			return cookie.substring(nameEQ.length);
+		}
+	}
+	return null;
+}
+
 $(document).ready(function(){
 
 	//////////////////////////
@@ -5,13 +18,12 @@ $(document).ready(function(){
 	/////////////////////////
 
 	var idTablenya = $('#tablenya');
-	var pathFile = '../auth/customer.php';
+	var pathFile = 'http://localhost:8082/api/v1/dashboard';
 	var Act = 'action';
 	var sLug = 'customer';
 	var FormsLug = 'CUSTOMER';
 	var IDForm = "#form_cs";
 	var addButton = "#tambah_customer";
-	var editButton = ".function_edit a";
 
 	//Message alert
 	var sukses = 'success';
@@ -21,21 +33,59 @@ $(document).ready(function(){
 	///////////////////////////
 
 	var tablenya = idTablenya.DataTable({
-	    "ajax": pathFile+"?"+Act+"=result_"+sLug,
-	    'columnDefs': [
-	    	{
-	    		'targets': [0,1,3,5],
-	    		'className': 'dt-nowrap'
-	        }
-	    ],
+		initComplete : function() {
+			var input = $('.dataTables_filter input').unbind(),
+			self = this.api(),
+			$searchButton = $(`<button class="btn btn-default"><i class="fa fa-search"></i></button>`).click(function(){ self.search(input.val()).draw(); });
+			$resetButton = $(`<button class="btn btn-default"><i class="fa fa-times"></i></button>`).click(function() { input.val('');$searchButton.click(); }); 
+			$('.dataTables_filter').append($searchButton, $resetButton);
+		},
+	    "serverSide" : true,
+	    "ajax": {
+			"url" : pathFile+"/customer",
+			"type": "GET",
+			"dataFilter": function(data) {
+				var obj = JSON.parse(data);
+				obj.data = obj.response.data;
+				obj.recordsTotal = obj.response.recordsTotal;
+				obj.recordsFiltered = obj.response.recordsFiltered;
+				return JSON.stringify( obj );
+			},
+			"dataSrc": function (json) {
+				if(json.code == 200) {
+					return json.response.data;
+				} else {
+					console.error('Error fetching data:', json);
+					return [];
+				}
+            },
+			"beforeSend": function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			},
+			"error": function (xhr, error, thrown) {
+				console.error('Error fetching data:', xhr, error, thrown);
+				alert('Terjadi kesalahan, silahkan login kembali.');
+				window.location.href = '/auth/signout.php';
+			}
+		},
 	    "columns": [
-	      { "data": "no" },
-	      { "data": "b_nama" },
+	      { "data": "customername" },
 	      { "data": "b_alamat"},
-	      { "data": "s_nama" },
-	      { "data": "s_alamat"},
-	      { "data": "functions","sClass": "functions dt-nowrap" }
+	      { "data": "sname" },
+	      { "data": "s_alamat"}
 	    ],
+		"columnDefs": [
+			{
+				"targets": 4,
+				"data": null,
+				"defaultContent": "",
+				"render": function (data, type, row) {
+					return '<button class="btn btn-default function_edit" data-id="'+ data.id +'"><i class="fa fa-pencil"></i></button>';
+					//return '<button class="btn btn-default function_edit" data-id="'+ data.id +'"><i class="fa fa-pencil"></i></button> <button class="btn btn-default function_delete" data-id="'+ data.id +'" data-name="'+ data.customername +'"><i class="fa fa-trash"></i></button>';
+				}
+			}
+		],
 	    "lengthMenu": [[10, -1], [10, "All"]],
 	    iDisplayLength: 10,
 	    dom: 'Bfrtip',
@@ -109,10 +159,8 @@ $(document).ready(function(){
 		$('#myModal').hide();
 	}
 
-	// Lightbox close button
-	$(document).on('click', '.lightbox_close', function(){
-	    hide_lightbox();
-	    $('#b_nama').val('');
+	function reset() {
+		$('#b_nama').val('');
 	    $('#b_alamat').val('');
 	    $('#b_kota').val('');
 	    $('#b_negara').val('');
@@ -126,6 +174,12 @@ $(document).ready(function(){
 	    $('#s_provinsi').val('');
 	    $('#s_kodepos').val('');
 	    $('#s_telp').val('');
+	}
+
+	// Lightbox close button
+	$(document).on('click', '.lightbox_close', function(){
+	    hide_lightbox();
+		reset();
 	});
 
 	// Escape keyboard key
@@ -158,49 +212,42 @@ $(document).ready(function(){
     	e.preventDefault();
 	    // Validate form
 	    if (FormNYA.valid() == true){
-	    	// Send company information to database
 	      	hide_ipad_keyboard();
 	      	hide_lightbox();
 	      	show_loading_message();
-	      	var form_data = $(IDForm).serialize();
-	      	var request   = $.ajax({
-	        	url:          pathFile+"?"+Act+"=add_"+sLug,
-	        	cache:        false,
-	        	data:         form_data,
-	        	dataType:     'json',
-	        	contentType:  'application/json; charset=utf-8',
-	        	type:         'get'
-	      	});
+			var form_data 	= $(IDForm).serializeArray();
+			var jsonData 	= {};
+			$.each(form_data, function(){
+				jsonData[this.name] = this.value;
+			});
+
+			var request   = $.ajax({
+				url:          pathFile+"/customer",
+				type:         'POST',
+				data:         JSON.stringify(jsonData),
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
+     		});
+			
 	      	request.done(function(output){
-	        	if (output.result == sukses){
+	        	if(output.status == "success"){
 	          		// Reload datable
 	          		tablenya.ajax.reload(function(){
 	            		hide_loading_message();
 	            		var Infos = $('#b_nama').val();
 	            		show_message("'"+Infos+"' berhasil dimasukan.", 'success');
-	            		$('#b_nama').val('');
-	            		$('#b_alamat').val('');
-	            		$('#b_kota').val('');
-		        		$('#b_provinsi').val('');
-		        		$('#b_negara').val('');
-		        		$('#b_kodepos').val('');
-	            		$('#b_telp').val('');
-	            		$('#s_nama').val('');
-	            		$('#s_alamat').val('');
-	            		$('#s_kota').val('');
-		        		$('#s_provinsi').val('');
-		        		$('#s_negara').val('');
-		        		$('#s_kodepos').val('');
-	            		$('#s_telp').val('');
+	            		reset();
 	          		}, true);
 	        	} else {
 	          		hide_loading_message();
-	          		show_message('Gagal memasukan data', 'error');
+	          		show_message('Failed: '+output.response.message, 'error');
 	        	}
-	      	});
-	      	request.fail(function(jqXHR, textStatus){
-	        	hide_loading_message();
-	        	show_message('Gagal memasukan data: '+textStatus, 'error');
+			});
+			request.fail(function(jqXHR, textStatus){
+				hide_loading_message();
+	        	show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	      	});
 	    }
   	});
@@ -209,49 +256,49 @@ $(document).ready(function(){
   	// Edit button
 	////////////////////
 
-	$(document).on('click', editButton, function(e){
+	$(document).on('click', '.function_edit', function(e){
 		e.preventDefault();
-	    // Get company information from database
 	    show_loading_message();
-	    var id      = $(this).data('id');
+		var id      = $(this).data('id');
 	    var request = $.ajax({
-	    	url:          pathFile+"?"+Act+"=get_"+sLug,
-	      	cache:        false,
+	    	url:          pathFile+"/customer",
+			type:         'GET',
 	      	data:         'id='+id,
-	      	dataType:     'json',
-	      	contentType:  'application/json; charset=utf-8',
-	      	type:         'get'
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
 	    });
 	    request.done(function(output){
-	    	if (output.result == sukses){
+	    	if(output.status == "success"){
 	    		$('h2.FormTitle').text('UBAH '+FormsLug);
 	        	$(IDForm).attr('class', 'form edit_cs');
 	        	$(IDForm).attr('data-id', id);
 	        	$('.field_container label.error').hide();
-	        	$('#b_nama').val(output.data[0].b_nama);
-		        $('#b_alamat').val(output.data[0].b_alamat);
-		        $('#b_kota').val(output.data[0].b_kota);
-		        $('#b_negara').val(output.data[0].b_negara);
-		        $('#b_provinsi').val(output.data[0].b_provinsi);
-		        $('#b_kodepos').val(output.data[0].b_kodepos);
-		        $('#b_telp').val(output.data[0].b_telp);
-		        $('#s_nama').val(output.data[0].s_nama);
-		        $('#s_alamat').val(output.data[0].s_alamat);
-		        $('#s_kota').val(output.data[0].s_kota);
-		        $('#s_negara').val(output.data[0].s_negara);
-		        $('#s_provinsi').val(output.data[0].s_provinsi);
-		        $('#s_kodepos').val(output.data[0].s_kodepos);
-		        $('#s_telp').val(output.data[0].s_telp);
+	        	$('#b_nama').val(output.response.data[0].customername);
+		        $('#b_alamat').val(output.response.data[0].address);
+		        $('#b_kota').val(output.response.data[0].city);
+		        $('#b_negara').val(output.response.data[0].country);
+		        $('#b_provinsi').val(output.response.data[0].province);
+		        $('#b_kodepos').val(output.response.data[0].postalcode);
+		        $('#b_telp').val(output.response.data[0].phone);
+		        $('#s_nama').val(output.response.data[0].s_nama);
+		        $('#s_alamat').val(output.response.data[0].s_alamat);
+		        $('#s_kota').val(output.response.data[0].s_kota);
+		        $('#s_negara').val(output.response.data[0].s_negara);
+		        $('#s_provinsi').val(output.response.data[0].s_provinsi);
+		        $('#s_kodepos').val(output.response.data[0].s_kodepos);
+		        $('#s_telp').val(output.response.data[0].s_telp);
 	        	hide_loading_message();
 	        	show_lightbox();
 	      	} else {
 	        	hide_loading_message();
-	        	show_message('Gagal mengambil data', 'error');
+	        	show_message('Failed: '+output.response.message, 'error');
 	      	}
 	    });
 	    request.fail(function(jqXHR, textStatus){
 	    	hide_loading_message();
-	      	show_message('Gagal mengambil data: '+textStatus, 'error');
+	      	show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	    });
 	});
 
@@ -262,50 +309,46 @@ $(document).ready(function(){
     	e.preventDefault();
     	// Validate form
     	if (FormNYA.valid() == true){
-      		// Send company information to database
       		hide_ipad_keyboard();
       		hide_lightbox();
       		show_loading_message();
-      		var id        = $(IDForm).attr('data-id');
-      		var form_data = $(IDForm).serialize();
-      		var request   = $.ajax({
-        		url:          pathFile+"?"+Act+"=edit_"+sLug+"&id="+id,
-        		cache:        false,
-        		data:         form_data,
-        		dataType:     'json',
-        		contentType:  'application/json; charset=utf-8',
-        		type:         'get'
+      		var form_data 	= $(IDForm).serializeArray();
+      		var id			= $(IDForm).attr('data-id');
+
+      		var jsonData = {};
+			$.each(form_data, function(){
+				jsonData[this.name] = this.value;
+			});
+			
+			jsonData.id = parseInt(id);
+
+			var request   = $.ajax({
+				url:          pathFile+"/customer",
+				type:         'PUT',
+				data:         JSON.stringify(jsonData),
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
      		});
+
       		request.done(function(output){
-        		if (output.result == sukses){
+        		if(output.status == "success"){
           			// Reload datable
           			tablenya.ajax.reload(function(){
             			hide_loading_message();
             			var Infos = $('#b_nama').val();
-            			show_message("'"+Infos+"' berhasil mengubah.", 'success');
-            			$('#b_nama').val('');
-	            		$('#b_alamat').val('');
-	            		$('#b_kota').val('');
-		        		$('#b_provinsi').val('');
-		        		$('#b_negara').val('');
-		        		$('#b_kodepos').val('');
-	            		$('#b_tlp').val('');
-	            		$('#s_nama').val('');
-	            		$('#s_alamat').val('');
-	            		$('#s_kota').val('');
-		        		$('#s_provinsi').val('');
-		        		$('#s_negara').val('');
-		        		$('#s_kodepos').val('');
-	            		$('#s_telp').val('');
+            			show_message("'"+Infos+"' update successfully.", 'success');
+            			reset();
           			}, true);
         		} else {
           			hide_loading_message();
-          			show_message('Gagal mengubah', 'error');
+          			show_message('Failed: '+output.response.message, 'error');
         		}
       		});
      		request.fail(function(jqXHR, textStatus){
         		hide_loading_message();
-        		show_message('Gagal mengubah: '+textStatus, 'error');
+        		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
       		});
     	}
   	});
@@ -313,36 +356,36 @@ $(document).ready(function(){
   	////////////////////
   	// Delete button
   	//////////////////
-  	$(document).on('click', '.function_delete a', function(e){
+  	$(document).on('click', '.function_delete', function(e){
 	    e.preventDefault();
 	    var Infos = $(this).data('name');
 	    if (confirm("Anda yakin ingin menghapus '"+Infos+"'?")){
 	    	show_loading_message();
-	      	var id      = $(this).data('id');
-	      	var request = $.ajax({
-	        	url:          pathFile+"?"+Act+"=del_"+sLug+"&id="+id,
-	        	cache:        false,
-	        	dataType:     'json',
-	        	contentType:  'application/json; charset=utf-8',
-	        	type:         'get'
-	      	});
+			var id      = $(this).data('id');
+			var request = $.ajax({
+				url:          pathFile+"/customer/"+id,
+				type:         'DELETE',
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
+			});
 	      	
 	      	request.done(function(output){
-	        	if (output.result == sukses){
+	        	if(output.status == "success"){
 	          		// Reload datable
 	          		tablenya.ajax.reload(function(){
 	            		hide_loading_message();
-	            		show_message("'"+Infos+"' berhasil dihapus.", 'success');
+	            		show_message("'"+Infos+"' delete successfully.", 'success');
 	          		}, true);
 	        	} else {
 	          		hide_loading_message();
-	          		show_message('Gagal menghapus', 'error');
-	       		}
-	      	});
-	      	
-	      	request.fail(function(jqXHR, textStatus){
-	        	hide_loading_message();
-	        	show_message('Gagal menghapus: '+textStatus, 'error');
+	          		show_message('Failed: '+output.response.message, 'error');
+        		}
+      		});
+     		request.fail(function(jqXHR, textStatus){
+        		hide_loading_message();
+        		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	      	});
 	    }
   	});

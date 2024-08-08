@@ -23,9 +23,6 @@ $(document).ready(function(){
 	var IDForm = "#form_inputUSER";
 	var addButton = "#add_inputUSER";
 
-	//Message alert
-	var sukses = 'success';
-
 	///////////////////////////
 	// On page load: datatable
 	///////////////////////////
@@ -186,15 +183,12 @@ $(document).ready(function(){
 			var form_data 	= $(IDForm).serializeArray();
 			var jsonData 	= {};
 			$.each(form_data, function(){
-				if(this.name == "role") {
-					jsonData['role'] = parseInt(this.value);
-				} else if(this.name == "status") {
-					jsonData['status'] = parseInt(this.value);
-				} else if(this.name == "account") {
-					jsonData['account'] = parseInt(this.value);
+				if(this.name == "role" || this.name == "status" || this.name == "account") {
+					value = parseInt(this.value);
 				} else {
-					jsonData[this.name] = this.value;
+					value = this.value;
 				}
+				jsonData[this.name] = value;
 			});
 			var request   = $.ajax({
 				url:          pathFile+"/user",
@@ -282,15 +276,12 @@ $(document).ready(function(){
 			
 			var jsonData = {};
 			$.each(form_data, function(){
-				if(this.name == "role") {
-					jsonData['role'] = parseInt(this.value);
-				} else if(this.name == "status") {
-					jsonData['status'] = parseInt(this.value);
-				} else if(this.name == "account") {
-					jsonData['account'] = parseInt(this.value);
+				if(this.name == "role" || this.name == "status" || this.name == "account") {
+					value = parseInt(this.value);
 				} else {
-					jsonData[this.name] = this.value;
+					value = this.value;
 				}
+				jsonData[this.name] = value;
 			});
 
 			jsonData.id = parseInt(id);
@@ -347,17 +338,16 @@ $(document).ready(function(){
 	          		// Reload datable
 	          		tablenya.api().ajax.reload(function(){
 	            		hide_loading_message();
-	            		show_message("'"+Infos+"' berhasil dihapus.", 'success');
+	            		show_message("'"+Infos+"' delete successfully.", 'success');
 	          		}, true);
 	        	} else {
 	          		hide_loading_message();
-	          		show_message('Gagal menghapus', 'error');
-	       		}
-	      	});
-	      	
-	      	request.fail(function(jqXHR, textStatus){
-	        	hide_loading_message();
-	        	show_message('Gagal menghapus: '+textStatus, 'error');
+	          		show_message('Failed: '+output.response.message, 'error');
+        		}
+      		});
+     		request.fail(function(jqXHR, textStatus){
+        		hide_loading_message();
+        		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	      	});
 	    }
   	});

@@ -163,16 +163,17 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group">
                   <label>Dari Tanggal: <span class="required">*</span></label>
-                  <input type="date" class="form-control" name="dari" id="dari" required>
+                  <input type="date" class="form-control" name="startdate" id="dari" required>
                 </div>
 
                 <div class="form-group">
                   <label>Sampai: <span class="required">*</span></label>
-                  <input type="date" class="form-control" name="sampai" id="sampai" required>
+                  <input type="date" class="form-control" name="enddate" id="sampai" required>
                 </div>
         
                 <div class="button_container" style="text-align: center">
                   <button type="submit" class="lihat">View</button>
+                  <input type="hidden" name="report" value="periode">
                   <input type="button" class="periode_close" value="Cancel">
                 </div>
               </form>
@@ -277,7 +278,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group phone">
                   <label for="phone">Telp: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="phone" id="phone" required>
+                  <input type="number" class="form-control" name="phone" id="phone" required>
                 </div>
 
                 <div class="form-group logo margin-bottom-lg">
@@ -367,7 +368,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
           <table id="tablenya" class="datatable responsive" style="width:100%">
             <thead>
               <tr>
-                  <th>No</th>
                   <th>Vendor Name</th>
                   <th>Address</th>
                   <th>Phone</th>
@@ -472,7 +472,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
           <table id="tablenya" class="datatable responsive" style="width:100%">
             <thead>
               <tr>
-                  <th>No</th>
                   <th>Bill Name</th>
                   <th>Bill Address</th>
                   <th>Ship Name</th>
@@ -501,22 +500,22 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                 
                 <div class="form-group b_nama">
                   <label for="b_nama">Nama : <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="b_nama" id="b_nama" required>
+                  <input type="text" class="form-control" name="customername" id="b_nama" required>
                 </div>
 
                 <div class="form-group b_alamat">
                   <label for="b_alamat">Address: <span class="required">*</span></label>
-                  <textarea class="form-control" name="b_alamat" id="b_alamat" required></textarea>
+                  <textarea class="form-control" name="address" id="b_alamat" required></textarea>
                 </div>
 
                 <div class="form-group b_kota">
                   <label for="b_kota">Kota: <span class="required">*</span></label>
-                  <input class="form-control" name="b_kota" id="b_kota" required>
+                  <input class="form-control" name="city" id="b_kota" required>
                 </div>
 
                 <div class="form-group b_negara">
                   <label for="b_negara">Negara: <span class="required">*</span></label>
-                  <select name="b_negara" id="b_negara" class="form-control">
+                  <select name="country" id="b_negara" class="form-control">
                     <option value="" selected disabled>Pilih negara</option>
                     <option value="Afghanistan">Afghanistan</option>
                     <option value="Albania">Albania</option>
@@ -766,17 +765,17 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group b_provinsi">
                   <label for="b_provinsi">Provinsi: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="b_provinsi" id="b_provinsi" required>
+                  <input type="text" class="form-control" name="province" id="b_provinsi" required>
                 </div>
 
                 <div class="form-group b_kodepos">
                   <label for="b_kodepos">Kode Pos: <span class="required">*</span></label>
-                  <input class="form-control" name="b_kodepos" id="b_kodepos" required>
+                  <input class="form-control" name="postalcode" id="b_kodepos" required>
                 </div>
 
                 <div class="form-group b_telp">
                   <label for="b_telp">No Telepon: <span class="required">*</span></label>
-                  <input type="number" min="0" maxlength="14" class="form-control" name="b_telp" id="b_telp" required>
+                  <input type="number" min="0" maxlength="14" class="form-control" name="phone" id="b_telp" required>
                 </div>
 
                 <hr>
@@ -787,22 +786,22 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                 
                 <div class="form-group s_nama">
                   <label for="s_nama">Nama :</label>
-                  <input type="text" class="form-control" name="s_nama" id="s_nama">
+                  <input type="text" class="form-control" name="sname" id="s_nama">
                 </div>
 
                 <div class="form-group s_alamat">
                   <label for="s_alamat">Address:</label>
-                  <textarea class="form-control" name="s_alamat" id="s_alamat"></textarea>
+                  <textarea class="form-control" name="saddress" id="s_alamat"></textarea>
                 </div>
 
                 <div class="form-group s_kota">
                   <label for="s_kota">Kota:</label>
-                  <input class="form-control" name="s_kota" id="s_kota">
+                  <input class="form-control" name="scity" id="s_kota">
                 </div>
 
                 <div class="form-group s_negara">
                   <label for="s_negara">Negara:</label>
-                  <select name="s_negara" id="s_negara" class="form-control">
+                  <select name="scountry" id="s_negara" class="form-control">
                     <option value="" selected disabled>Pilih negara</option>
                     <option value="Afghanistan">Afghanistan</option>
                     <option value="Albania">Albania</option>
@@ -1052,17 +1051,17 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group s_provinsi">
                   <label for="s_provinsi">Provinsi:</label>
-                  <input type="text" class="form-control" name="s_provinsi" id="s_provinsi">
+                  <input type="text" class="form-control" name="sprovince" id="s_provinsi">
                 </div>
 
                 <div class="form-group s_kodepos">
                   <label for="s_kodepos">Kode Pos:</label>
-                  <input class="form-control" name="s_kodepos" id="s_kodepos">
+                  <input class="form-control" name="spostalcode" id="s_kodepos">
                 </div>
 
                 <div class="form-group s_telp">
                   <label for="s_telp">No Telepon:</label>
-                  <input type="number" min="0" maxlength="14" class="form-control" name="s_telp" id="s_telp">
+                  <input type="number" min="0" maxlength="14" class="form-control" name="sphone" id="s_telp">
                 </div>
 
                 <div class="button_container" style="text-align: center">
@@ -5424,7 +5423,8 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
       <div class="row">
         <div class ="container-fluid">
           <?php if($_SESSION['role'] != '5'){ ?>
-            <button type="button" class="button" id="add_inputPO">Input PURCHASE ORDER</button>
+            <button type="button" class="button" id="create_po">Create New</button>
+            <button type="button" class="button" id="add_item_po">Add Item PO</button>
           <?php } ?>
 
           <table id="tablenya" class="datatable" style="width:100%">
@@ -5439,7 +5439,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
             </caption>
             <thead>
               <tr>
-                  <th>No</th>
                   <th>Date</th>
                   <th>Company</th>
                   <th>Vendor</th>
@@ -5462,37 +5461,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                   <th>Total</th>
                   <th>Diinput</th>
                   <th>Option</th>
-              </tr>
-            </thead>
-            <tbody>
-            </tbody>
-          </table>
-
-          <table id="tablePrint" class="datatable nowrap" style="display: none">
-            <thead>
-              <tr>
-                  <th>No</th>
-                  <th>Date</th>
-                  <th>Company</th>
-                  <th>Vendor</th>
-                  <th>PO No</th>
-                  <th>Purchase Order</th>
-                  <th>Detail</th>
-                  <th>Size</th>
-                  <th>Price</th>
-                  <th>Price/Roll</th>
-                  <th>Qty</th>
-                  <th>Unit</th>
-                  <th>Merk</th>
-                  <th>Type</th>
-                  <th>Core</th>
-                  <th>Gulungan</th>
-                  <th>bahan</th>
-                  <th>Note</th>
-                  <th>Subtotal</th>
-                  <th>Tax</th>
-                  <th>Total</th>
-                  <th>Diinput</th>
               </tr>
             </thead>
             <tbody>
@@ -5522,7 +5490,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                 <th></th>
                 <th></th>
               </tr>
-            </tfoot>            
+            </tfoot> 
           </table>
 
           <!-- Modal Ongkir -->
@@ -5537,16 +5505,17 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group">
                   <label>Dari Tanggal: <span class="required">*</span></label>
-                  <input type="date" class="form-control" name="dari" id="dari" required>
+                  <input type="date" class="form-control" name="startdate" id="startdate" required>
                 </div>
 
                 <div class="form-group">
                   <label>Sampai: <span class="required">*</span></label>
-                  <input type="date" class="form-control" name="sampai" id="sampai" required>
+                  <input type="date" class="form-control" name="enddate" id="enddate" required>
                 </div>
         
                 <div class="button_container" style="text-align: center">
                   <button type="submit" class="lihat">View</button>
+                  <input type="hidden" id="report" name="report" value="periode">
                   <input type="button" class="periode_close" value="Cancel">
                 </div>
               </form>
@@ -5560,18 +5529,24 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
             <div class="modal-content">
               <span class="close lightbox_close">&times;</span>
               
-              <h2 class="FormTitle" style="text-align: center">INPUT PURCHASE ORDER</h2>
+              <h2 class="FormTitle" style="text-align: center">CREATE PURCHASE ORDER</h2>
               <form class="form add" id="form_inputPO" data-id="" novalidate>
 
                 <div class="form-group company">
                   <label for="company">Company: <span class="required">*</span></label>
-                  <select class="form-control" name="company" id="company" required></select>
+                  <select class="form-control" name="companyid" id="company" required></select>
+                </div>
+
+                <div class="form-group po_number" style="display: none">
+                  <label for="po_number">PO Number: <span class="required">*</span></label>
+                  <input type="text" class="form-control" name="po_number" id="po_number" required>
+                  <input type="hidden" name="fkid" id="fkid" value="">
                 </div>
 
                 <div class="form-group vendor">
                   <label for="vendor">Vendor Name: <span class="required">*</span></label>
                   <input type="text" class="form-control" name="vendor" id="vendor" required>
-                  <input type="hidden" name="id_vendor" id="id_vendor" value="">
+                  <input type="hidden" name="vendorid" id="id_vendor" value="">
                 </div>
 
                 <div class="form-group po_date">
@@ -5586,7 +5561,8 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group po_type">
                   <label for="purchase">Purchase Order Type: <span class="required">*</span></label>
-                  <select class="form-control" name="po_type" id="po_type" required></select>
+                  <select class="form-control" id="po_type" required></select>
+                  <input type="hidden" class="po_type" name="po_type" value="" />
                 </div>
 
                 <hr class='header-item'>
@@ -5622,12 +5598,12 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group gulungan" style="display: none">
                   <label for="gulungan">Gulungan: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="data[gulungan][]" id="gulungan" required>
+                  <input type="text" class="form-control" name="data[roll][]" id="gulungan" required>
                 </div>
 
                 <div class="form-group bahan" style="display: none">
                   <label for="bahan">Bahan: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="data[bahan][]" id="bahan" required>
+                  <input type="text" class="form-control" name="data[material][]" id="bahan" required>
                 </div>
 
                 <div class="form-group price_1">
@@ -5668,7 +5644,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group ppns">
                   <label for="sel1">Tax: <span class="required">*</span></label></label>
-                  <select class="form-control" name="ppns" id="ppns" required>
+                  <select class="form-control" name="tax" id="ppns" required>
                     <option value="" selected disabled>Menggunakan PPN 11% ?</option>
                     <option value="0">Tidak</option>
                     <option value="1">Ya</option>
