@@ -595,8 +595,52 @@ $(document).ready(function(){
 			},
 			select: function(event, ui)
 			{
-				$('#po_number').val(ui.item.category);
-				$('#fkid').val(ui.item.fkid);
+				var po_number = ui.item.category;
+				var fkid = (ui.item.fkid > 0 ? ui.item.fkid : '' );
+				var item_type = (ui.item.item_type > 0 ? ui.item.item_type : '');
+
+				$('#po_type_add_item').attr('id', 'po_type');
+				reset();
+				$('#form_inputPO').attr('id', 'form_AddItemPO');
+				$('#po_type').attr('id', 'po_type_add_item');
+				$('.po_number').show();
+				$('.company').hide();
+				$('#company').val('');
+				$('.vendor').hide();
+				$('#vendor').val('');
+				$('.po_date').hide();
+				$('#po_date').val('');
+				$('.note').hide();
+				$('#note').val('');
+				$('.ppns').hide();
+				$('#tax').val('');
+				$('#looping_barang').empty();
+				$('.tambah_barang').show();
+				document.getElementById("po_type_add_item").disabled = true;
+
+				$('#po_number').val(po_number);
+				$('#fkid').val(fkid);
+
+				if(item_type > 0)
+				{
+					$('#po_type_add_item').val(item_type);
+					$('.tambah_barang').show();
+
+					$.ajax({
+						url: pathFile+"/purchase-order/suggest/attr?id="+item_type,
+						type: "GET",
+						beforeSend: function (xhr) {
+							xhr.setRequestHeader('Authorization', getCookie('access_token'));
+							xhr.setRequestHeader('Content-Type', 'application/json');
+						},
+						success: function(output){
+							po_type_attribute = output.response.data.field;
+							split_po_type_attribute = output.response.data.field.split(',');
+							for(var x = 0; x < split_po_type_attribute.length; x++)
+								$('.'+split_po_type_attribute[x]).show();
+						}
+					});
+				}				
 			}
 		});
 
@@ -1627,6 +1671,7 @@ $(document).ready(function(){
     	e.preventDefault();
 		$('#po_type_add_item').attr('id', 'po_type');
 		reset();
+		$('#form_inputPO').attr('id', 'form_AddItemPO');
 		$('#po_type').attr('id', 'po_type_add_item');
 		$('.po_number').show();
 		$('.company').hide();
