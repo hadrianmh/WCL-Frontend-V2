@@ -6,11 +6,8 @@ $(document).ready(function(){
 
 	var idTablenya = $('#tablenya');
 	var pathFile = 'http://localhost:8082/api/v1/dashboard';
-	var Act = 'action';
-	var sLug = 'purchase';
 	var FormsLug = 'PURCHASE ORDER';
 	var IDForm = "#form_inputPO";
-	var sukses = 'success'; //Message alert
 	var barisN = 1;
 	var loopN = 1;
 	var companyJSON = [];
@@ -158,6 +155,7 @@ $(document).ready(function(){
 			$('.dataTables_filter').append($searchButton, $resetButton);
 		},
 		"serverSide" : true,
+		"scrollX": true,
 	    "ajax": {
 			"url" : pathFile+"/purchase-order?report="+getCookie("report")+"&startdate="+getCookie("startdate")+"&enddate="+getCookie("enddate"),
 			"type": "GET",
@@ -183,10 +181,9 @@ $(document).ready(function(){
 			"error": function (xhr, error, thrown) {
 				console.error('Error fetching data:', xhr, error, thrown);
 				alert('Terjadi kesalahan, silahkan login kembali.');
-				// window.location.href = '/auth/signout.php';
+				window.location.href = '/auth/signout.php';
 			}
 		},
-		"scrollX": true,
 	    'columnDefs': [
 	    	{
 	    		'targets': [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20,21],
@@ -498,8 +495,6 @@ $(document).ready(function(){
 
       	request.done(function(output){
 	    	if(output.status == "success"){
-	    		// tablenya.ajax.url(pathFile+"/purchase-order"+form_data).load();
-      			// tablenya.draw();
 				setCookie("report", report, 1);
 				setCookie("startdate", startdate, 1);
 				setCookie("enddate", enddate, 1);
@@ -1244,14 +1239,7 @@ $(document).ready(function(){
 	$(document).on('click', '.UbahItem', function(e){
 		e.preventDefault();
 	    show_loading_message();
-		var form_data 	= $(IDForm).serializeArray();
 		var id			= $(this).data('id');
-
-		var jsonData = {};
-		$.each(form_data, function(){
-			jsonData[this.name] = this.value;
-		});
-
 		var request = $.ajax({
 			url:          pathFile+"/purchase-order/item/"+id,
 			type:         'GET',

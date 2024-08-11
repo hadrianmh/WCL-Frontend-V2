@@ -5,15 +5,11 @@ $(document).ready(function(){
 	/////////////////////////
 
 	var idTablenya = $('#tablenya');
-	var pathFile = '../auth/workorder.php';
+	var pathFile = 'http://localhost:8082/api/v1/dashboard';
 	var Act = 'action';
 	var sLug = 'workorder';
 	var FormsLug = 'SPK';
 	var IDForm = "#form_inputWO";
-	var addButton = "#add_inputWO";
-	var viewButton = ".function_view a";
-	var undoButton = ".backWO";
-	var delButton = ".function_delete a";
 	var sukses = 'success'; //Message alert
 
 	/////////////////////////////////////////////////////////////////
@@ -22,7 +18,8 @@ $(document).ready(function(){
 
 	var mm = ("0" + (new Date().getMonth() + 1)).slice(-2);
 	var yyyy = new Date().getFullYear();
-	var arsip = yyyy+"/"+mm;
+	var startdate = yyyy+"/"+mm;
+	var report = 'month';
 
 	function setCookie(cname, cvalue, exdays) {
 	    var d = new Date();
@@ -51,33 +48,48 @@ $(document).ready(function(){
 	/////////////////////////////////////////////////////////////////
 
 	var req = $.ajax({
-		url: pathFile+"?"+Act+"=sortdata_"+sLug,
-		cache: false,
-		dataType: 'json',
-		contentType: 'application/json; charset=utf-8',
-		type: 'get'
-	});
-
-	req.done(function(output){
-		if(output.result == sukses){
-			for(var i = 0; i<output.data.length; i++){
-				$("#sortby").append("<option value='"+output.data[i].montly+"' "+(getCookie("selectMonth") == output.data[i].montly ? 'selected' : '')+" >"+output.data[i].montly+"</option>");
-			}
-			setCookie("selectMonth", arsip, 1);
-
-		} else {
-	        show_message('Gagal memuat data', 'error');
+		url: pathFile+"/sortdata/archive?data=po_date&from=po_customer",
+		type: "GET",
+		beforeSend: function (xhr) {
+			xhr.setRequestHeader('Authorization', getCookie('access_token'));
+			xhr.setRequestHeader('Content-Type', 'application/json');
 		}
 	});
 
-	$(document).on('change', '#sortby', function(){
-		var valMonth = $(this).find(":selected").val();
-		setCookie("selectMonth", valMonth, 1);
+	req.done(function(output){
+		if(output.status == "success"){
+			for(var i=0; i<output.response.data[0].year.length; i++) {
+				$("#sortby").append("<option value='"+output.response.data[0].year[i]+"' data-name='year' "+(getCookie("startdate") == output.response.data[0].year[i] ? 'selected' : '')+" >Tahun: "+output.response.data[0].year[i]+"</option>");
+			}
+			
+			for(var i = 0; i<output.response.data[0].month.length; i++){
+				$("#sortby").append("<option value='"+output.response.data[0].month[i]+"' data-name='month' "+(getCookie("startdate") == output.response.data[0].month[i] ? 'selected' : '')+" >Bulan: "+output.response.data[0].month[i]+"</option>");
+			}
+			setCookie("report", report, 1);
+			setCookie("startdate", startdate, 1);
+
+		} else {
+	        show_message('Failed: sort data fetching.', 'error');
+		}
+	});
+
+	req.fail(function(jqXHR, textStatus){
+		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
+	});
+
+	$(document).on('change', '#sortby', function(e){
+		e.preventDefault();
+		report = $(this).attr('name');
+		startdate = $(this).find(":selected").val();
+		setCookie("report", report, 1);
+		setCookie("startdate", startdate, 1);
 	});
 
 	$(document).on('click', '#LoadData', function(){
-		var valMonth = $('#sortby').find(":selected").val();
-		setCookie("selectMonth", valMonth, 1);
+		report = $('#sortby').find(":selected").attr('data-name');
+		startdate = $('#sortby').find(":selected").val();
+		setCookie("report", report, 1);
+		setCookie("startdate", startdate, 1);
 		location.reload();
 	});
 
@@ -86,10 +98,58 @@ $(document).ready(function(){
 	///////////////////////////
 
 	var tablenya = idTablenya.DataTable({
+		initComplete : function() {
+			var input = $('.dataTables_filter input').unbind(),
+			self = this.api(),
+			$searchButton = $(`<button class="btn btn-default"><i class="fa fa-search"></i></button>`).click(function(){ self.search(input.val()).draw(); });
+			$resetButton = $(`<button class="btn btn-default"><i class="fa fa-times"></i></button>`).click(function() { input.val('');$searchButton.click(); }); 
+			$('.dataTables_filter').append($searchButton, $resetButton);
+		},
+		"serverSide" : true,
 		"scrollX": true,
-	    "ajax": pathFile+"?"+Act+"=result_"+sLug+"&curMonth="+getCookie("selectMonth"),
+	    "ajax": {
+			"url" : pathFile+"/workorder?report="+getCookie("report")+"&startdate="+getCookie("startdate")+"&enddate="+getCookie("enddate"),
+			"type": "GET",
+			"dataFilter": function(data) {
+				var obj = JSON.parse(data);
+				obj.data = obj.response.data;
+				obj.recordsTotal = obj.response.recordsTotal;
+				obj.recordsFiltered = obj.response.recordsFiltered;
+				return JSON.stringify( obj );
+			},
+			"dataSrc": function (json) {
+				if(json.code == 200) {
+					return json.response.data;
+				} else {
+					console.error('Error fetching data:', json);
+					return [];
+				}
+            },
+			"beforeSend": function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			},
+			"error": function (xhr, error, thrown) {
+				console.error('Error fetching data:', xhr, error, thrown);
+				alert('Terjadi kesalahan, silahkan login kembali.');
+				// window.location.href = '/auth/signout.php';
+			}
+		},
+		'columnDefs': [
+			{
+	    		'targets': [0,1,2,3,4,6,8,9,10,11,12,13,14,16,17,18,19,20,21],
+	            'className': 'dt-nowrap'
+	        },
+			{
+				"targets": 21,
+				"data": null,
+				"defaultContent": "",
+				"render": function (data, type, row) {
+					return '<button class="btn btn-default WoProses" data-id="'+ data.customerid +'-'+data.sequence_item+'" title="Proses"><i class="fa fa-share"></i></button> <button class="btn btn-default WoPrint" data-id="'+ data.customerid +'-'+data.sequence_item+'" title="Print"><i class="fa fa-print"></i></button>';
+				}
+			}
+		],
 	    "columns": [
-	      {"data": "no" },
 	      {"data": "spk_date"},
 	      {"data": "duration" },
 	      {"data": "customer"},
@@ -98,7 +158,7 @@ $(document).ready(function(){
 	      {"data" : "item"},
 	      {"data" : "size"},
 	      {"data" : "qore"},
-	      {"data" : "line"},
+	      {"data" : "lin"},
 	      {"data" : "roll"},
 	      {"data" : "ingredient"},
 	      {"data" : "porporasi"},
@@ -106,12 +166,11 @@ $(document).ready(function(){
 	      {"data" : "unit"},
 	      {"data" : "volume"},
 	      {"data" : "annotation"},
-	      {"data" : "uk_bahan"},
-	      {"data" : "qty_bahan"},
+	      {"data" : "uk_bahan_baku"},
+	      {"data" : "qty_bahan_baku"},
 	      {"data" : "sources"},
-	      {"data": "order_status"},
-	      {"data": "input"},
-	      {"data": "functions","sClass": "functions" }
+	      {"data": "orderstatus"},
+	      {"data": "input_by"},
 	    ],
 	    "lengthMenu": [[10, -1], [10, "All"]],
 	    iDisplayLength: 10,
@@ -273,32 +332,35 @@ $(document).ready(function(){
     	hide_ipad_keyboard();
       	periode_hide();
       	show_loading_message();
-      	var form_data = $(FormPeriode).serialize();
-      	var request   = $.ajax({
-        	url:          pathFile+"?"+Act+"=periode_"+sLug,
-        	cache:        false,
-        	data:         form_data,
-        	method: 	  'GET',
-        	dataType: 'json'
-      	});
+      	report = $("#report").val();
+		startdate = $("#startdate").val();
+		enddate = $("#enddate").val();
+      	var request = $.ajax({
+	    	url:          pathFile+"/workorder",
+			type:         'GET',
+			data:         'report='+report+'&startdate='+startdate+'&enddate='+enddate,
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
+	    });
 
       	request.done(function(output){
-	    	if (output.result == sukses){
-	    		tablenya.ajax.url(pathFile+"?"+Act+"=periode_"+sLug+"&"+form_data).load();
-      			tablenya.draw();
-        		hide_loading_message();
-        		show_message("Berhasil memuat dimasukan.", 'success');
-        		periode_reset();
+	    	if(output.status == "success"){
+	    		setCookie("report", report, 1);
+				setCookie("startdate", startdate, 1);
+				setCookie("enddate", enddate, 1);
+        		location.reload();
 
 	    	} else {
 	      		hide_loading_message();
-	      		show_message(output.message, 'error');
+	      		show_message('Failed: '+output.response.message, 'error');
 	    	}
 	  	});
 
 	  	request.fail(function(jqXHR, textStatus){
 	    	hide_loading_message();
-	    	show_message('Gagal memuat data: '+textStatus, 'error');
+	    	show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	  	});
   	});
 
@@ -306,21 +368,22 @@ $(document).ready(function(){
   	// Edit button
 	////////////////////
 
-	$(document).on('click', '.UbahCustomer a', function(e){
+	$(document).on('click', '.WoProses', function(e){
 		e.preventDefault();
 	    show_loading_message();
 	    var idx		= $(this).data('id');
 	    var ex 		= idx.split('-');
 	    var request = $.ajax({
-	    	url:          pathFile+"?"+Act+"=get_"+sLug,
-	      	cache:        false,
-	      	data:         'id='+ex[0]+'&item_to='+ex[1],
-	      	dataType:     'json',
-	      	contentType:  'application/json; charset=utf-8',
-	      	type:         'get'
+	    	url:          pathFile+"/workorder/process/"+ex[0]+"/"+ex[1],
+			type:         'GET',
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
 	    });
+
 	    request.done(function(output){
-	    	if (output.result == sukses){
+	    	if(output.status == "success"){
 	    		$('h2.FormTitle').text('UBAH '+FormsLug);
 	        	$(IDForm +'').attr('class', 'form edit_customer');
 	        	$(IDForm +'').attr('data-id', idx);
@@ -331,22 +394,22 @@ $(document).ready(function(){
 	        	$(".no_spk").show();
 	        	$(".spk_date").show();
 	        	$(".order_status").show();
-	        	$("#po_date").val(output.data[0].po_date);
-	        	$("#customer").val(output.data[0].customer);
-	        	$("#po_customer").val(output.data[0].po_customer);
-	        	$("#no_spk").val(output.data[0].no_spk);
-	        	$("#spk_date").val(output.data[0].spk_date);
-	        	$("#order_status").val(output.data[0].order_status);
+	        	$("#po_date").val(output.response.data[0].po_date);
+	        	$("#customer").val(output.response.data[0].customer);
+	        	$("#po_customer").val(output.response.data[0].po_customer);
+	        	$("#no_spk").val(output.response.data[0].no_spk);
+	        	$("#spk_date").val(output.response.data[0].spk_date);
+	        	$("#order_status").val(output.response.data[0].order_status);
 	        	hide_loading_message();
 	        	show_lightbox();
 	      	} else {
 	        	hide_loading_message();
-	        	show_message('Gagal mengambil data', 'error');
+	        	show_message('Failed: '+output.response.message, 'error');
 	      	}
 	    });
 	    request.fail(function(jqXHR, textStatus){
 	    	hide_loading_message();
-	      	show_message('Gagal mengambil data: '+textStatus, 'error');
+			show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	    });
 	});
 
@@ -362,34 +425,49 @@ $(document).ready(function(){
       		show_loading_message();
       		var idx		= $(IDForm).attr('data-id');
 	    	var ex 		= idx.split('-');
-      		var form_data = $(IDForm).serialize();
-      		var request   = $.ajax({
-        		url:          pathFile+"?"+Act+"=edit_"+sLug+"&id="+ex[0]+"&item_to="+ex[1],
-        		cache:        false,
-        		data:         form_data,
-        		dataType:     'json',
-        		contentType:  'application/json; charset=utf-8',
-        		type:         'get'
+			var form_data 	= $(IDForm).serializeArray();
+
+			var jsonData = {};
+			$.each(form_data, function(){
+				if(this.name == 'item_to' || this.name == 'order_status') {
+					value = parseInt(this.value)
+				} else {
+					value = this.value
+				}
+				jsonData[this.name] = value;
+			});
+			
+			jsonData.id = parseInt(ex[0]);
+
+			var request   = $.ajax({
+				url:          pathFile+"/workorder",
+				type:         'POST',
+				data:         JSON.stringify(jsonData),
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
      		});
+
       		request.done(function(output){
-        		if (output.result == sukses){
+        		if(output.status == "success"){
           			tablenya.ajax.reload(function(){
           				show_all_elemen();
             			hide_loading_message();
             			var Infos = $('#customer').val();
-            			show_message("'"+Infos+"' berhasil diubah.", 'success');
+            			show_message("'"+Infos+"' update successfully.", 'success');
             			show_all_elemen();
           			}, true);
         		} else {
           			hide_loading_message();
-          			show_message('Gagal diubah', 'error');
           			show_all_elemen();
+          			show_message('Failed: '+output.response.message, 'error');
         		}
       		});
      		request.fail(function(jqXHR, textStatus){
         		hide_loading_message();
-        		show_message('Gagal diubah: '+textStatus, 'error');
         		show_all_elemen();
+        		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
       		});
     	}
   	});
