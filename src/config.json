@@ -1,0 +1,6 @@
+{
+    "base_url_api": "http://host.docker.internal",
+    "base_path_api": "/api/v1",
+    "base_port_api": "8082",
+    "base_dashboard_api": "/dashboard"
+}   

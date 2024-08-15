@@ -1,6 +1,14 @@
 ///////////////////////////////////
 // ketika refresh page
 ///////////////////////////////////
+function convertToRupiah(angka){
+	let formatted = new Intl.NumberFormat('id-ID', {
+		style: 'currency',
+		currency: 'IDR',
+		minimumFractionDigits: 2
+	}).format(angka);
+	return formatted;
+}
 
 $(document).ready(function(){
 	//////////////////////////
@@ -8,7 +16,7 @@ $(document).ready(function(){
 	/////////////////////////
 
 	var idTablenya = $('#tablenya');
-	var pathFile = '../auth/dashboard.php';
+	var pathFile = decodeURIComponent(getCookie('base_url_api')) +':'+ getCookie('base_port_api') + decodeURIComponent(getCookie('base_path_api')) + decodeURIComponent(getCookie('base_dashboard_api'));
 	var Act = 'action';
 	var sLug = 'dashboard';
 
@@ -17,14 +25,48 @@ $(document).ready(function(){
 	//////////////////////////////////////////////////////////////
 
 	var tablenya = idTablenya.DataTable({
-		//"scrollX": true,
+		initComplete : function() {
+			var input = $('.dataTables_filter input').unbind(),
+			self = this.api(),
+			$searchButton = $(`<button class="btn btn-default"><i class="fa fa-search"></i></button>`).click(function(){ self.search(input.val()).draw(); });
+			$resetButton = $(`<button class="btn btn-default"><i class="fa fa-times"></i></button>`).click(function() { input.val('');$searchButton.click(); }); 
+			$('.dataTables_filter').append($searchButton, $resetButton);
+		},
+		"scrollX": true,
+		"serverSide" : true,
 		"searching": false,
 		"paging":   false,
         "ordering": false,
         "info":     false,
-	    "ajax": pathFile+"?"+Act+"=result_"+sLug+"&curMonth="+getCookie("selectMonth"),
+	    "ajax": {
+			"url" : pathFile+"/metrics/so-tracking?report="+getCookie("report")+"&startdate="+getCookie("startdate")+"&enddate="+getCookie("enddate"),
+			"type": "GET",
+			"dataFilter": function(data) {
+				var obj = JSON.parse(data);
+				obj.data = obj.response.data;
+				obj.recordsTotal = obj.response.recordsTotal;
+				obj.recordsFiltered = obj.response.recordsFiltered;
+				return JSON.stringify( obj );
+			},
+			"dataSrc": function (json) {
+				if(json.code == 200) {
+					return json.response.data;
+				} else {
+					console.error('Error fetching data:', json);
+					return [];
+				}
+            },
+			"beforeSend": function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			},
+			"error": function (xhr, error, thrown) {
+				console.error('Error fetching data:', xhr, error, thrown);
+				alert('Terjadi kesalahan, silahkan login kembali.');
+				window.location.href = '/auth/signout.php';
+			}
+		},
 	    "columns": [
-	      { "data": "no" },
 	      { "data": "company" },
 	      { "data": "order_grade" },
 	      { "data": "no_spk"},
@@ -34,32 +76,32 @@ $(document).ready(function(){
 	      { "data": "po_customer"},
 	      { "data": "po_date"},
 	      { "data": "item"},
-	      { "data": "detail"},
+	      { "data": "isi"},
 	      { "data": "merk"},
 	      { "data": "type"},
 	      { "data" : "size"},
 	      { "data" : "qore"},
-	      { "data" : "line"},
+	      { "data" : "lin"},
 	      { "data" : "roll"},
 	      { "data" : "ingredient"},
 	      { "data" : "porporasi"},
 	      { "data" : "qty"},
 	      { "data": "unit"},
 	      { "data" : "volume"},
-	      { "data" : "uk_bahan"},
-	      { "data" : "qty_bahan"},
+	      { "data" : "uk_bahan_baku"},
+	      { "data" : "qty_bahan_baku"},
 	      { "data" : "annotation"},
 	      { "data" : "sources"},
-	      { "data": "price", render: $.fn.dataTable.render.number( '', '', 0, '' )},
+	      { "data": "price"},
 	      { "data": "price_before"},
 	      { "data": "tax"},
 	      { "data": "total"},
 	      { "data": "spk_date"},
 	      { "data": "order_status"},
-	      { "data": "no_delivery"},
+	      { "data": "sj_no"},
 	      { "data": "sj_date"},
 	      { "data": "courier"},
-	      { "data": "no_tracking"},
+	      { "data": "resi"},
 	      { "data": "send_qty"},
 	      { "data": "cost"}
 	    ],
@@ -83,7 +125,7 @@ $(document).ready(function(){
                 periode_show();
             }
         }
-        ],
+        ]
 	});
 
 	// Show message
@@ -154,60 +196,14 @@ $(document).ready(function(){
     	hide_ipad_keyboard();
       	periode_hide();
       	show_loading_message();
-      	setCookie("selectMonth", $('#dari').val()+"_"+$('#sampai').val(), 1);
-      	var form_data = $(FormPeriode).serialize();
-      	var request   = $.ajax({
-        	url:          pathFile+"?"+Act+"=periode_"+sLug,
-        	cache:        false,
-        	data:         form_data,
-        	method: 	  'GET',
-        	dataType: 'json'
-      	});
-
-      	request.done(function(output){
-	    	if (output.result == 'success'){
-
-	    		var Ambil = $.ajax({
-					url: pathFile+"?"+Act+"=statistik_periode_"+sLug+"&"+form_data,
-					cache: false,
-					dataType: 'json',
-					contentType: 'application/json; charset=utf-8',
-					type: 'get'
-				});
-
-				Ambil.done(function(output){
-					if(output.result == 'success'){
-						$('.statistiPO').html(output.data[0].jml_po);
-			            $('.statistiSPK').html(output.data[0].jml_wo);
-			            $('.statistiSJ').html(output.data[0].jml_do);
-			            $('.statistiFAKTUR').html(output.data[0].jml_in);
-			            show_message("Berhasil memuat data.", 'success');
-					} else {
-				        show_message('Gagal memuat data', 'error');
-					}
-				});
-
-				Ambil.fail(function(jqXHR, textStatus){
-			    	hide_loading_message();
-			    	show_message('Gagal memuat data: '+textStatus, 'error');
-			  	});
-
-	    		tablenya.ajax.url(pathFile+"?"+Act+"=periode_"+sLug+"&"+form_data).load();
-      			tablenya.draw();
-        		hide_loading_message();
-        		show_message("Berhasil memuat dimasukan.", 'success');
-        		periode_reset();
-
-	    	} else {
-	      		hide_loading_message();
-	      		show_message(output.message, 'error');
-	    	}
-	  	});
-
-	  	request.fail(function(jqXHR, textStatus){
-	    	hide_loading_message();
-	    	show_message('Gagal memuat data: '+textStatus, 'error');
-	  	});
+		report = $("#report").val();
+		startdate = $("#startdate").val();
+		enddate = $("#enddate").val();
+		setCookie("report", report, 1);
+		setCookie("startdate", startdate, 1);
+		setCookie("enddate", enddate, 1);
+		hide_loading_message();
+		window.location.reload();
   	});
 
 	/////////////////////////////////////////////////////////////////
@@ -216,7 +212,8 @@ $(document).ready(function(){
 
 	var mm = ("0" + (new Date().getMonth() + 1)).slice(-2);
 	var yyyy = new Date().getFullYear();
-	var arsip = yyyy+"/"+mm;
+	var startdate = yyyy+"/"+mm;
+	var report = 'month';
 
 	function setCookie(cname, cvalue, exdays) {
 	    var d = new Date();
@@ -245,41 +242,48 @@ $(document).ready(function(){
 	/////////////////////////////////////////////////////////////////
 
 	var Sortdata = $.ajax({
-		url: pathFile+"?"+Act+"=sortdata_"+sLug,
-		cache: false,
-		dataType: 'json',
-		contentType: 'application/json; charset=utf-8',
-		type: 'get'
+		url: pathFile+"/sortdata/archive?data=po_date&from=preorder_customer",
+		type: "GET",
+		beforeSend: function (xhr) {
+			xhr.setRequestHeader('Authorization', getCookie('access_token'));
+			xhr.setRequestHeader('Content-Type', 'application/json');
+		}
 	});
 
 	Sortdata.done(function(output){
-		if(output.result == 'success'){
-			for(var i = 0; i<output.data[0].year.length; i++){
-				$("#sortby").append("<option value='"+output.data[0].year[i]+"'>Tahun: "+output.data[0].year[i]+"</option>");
+		if(output.status == "success"){
+			for(var i=0; i<output.response.data[0].year.length; i++) {
+				$("#sortby").append("<option value='"+output.response.data[0].year[i]+"' data-name='year' "+(getCookie("startdate") == output.response.data[0].year[i] ? 'selected' : '')+" >Tahun: "+output.response.data[0].year[i]+"</option>");
 			}
 			
-			for(var x = 0; x<output.data[0].montly.length; x++){
-				$("#sortby").append("<option value='"+output.data[0].montly[x]+"' "+(getCookie("selectMonth") == output.data[0].montly[x] ? 'selected' : '')+" >"+output.data[0].montly[x]+"</option>");
+			for(var i = 0; i<output.response.data[0].month.length; i++){
+				$("#sortby").append("<option value='"+output.response.data[0].month[i]+"' data-name='month' "+(getCookie("startdate") == output.response.data[0].month[i] ? 'selected' : '')+" >Bulan: "+output.response.data[0].month[i]+"</option>");
 			}
+			setCookie("report", report, 1);
+			setCookie("startdate", startdate, 1);
 
 		} else {
-	        show_message('Gagal memuat data', 'error');
+			show_message('Failed: sort data fetching.', 'error');
 		}
 	});
 
 	Sortdata.fail(function(jqXHR, textStatus){
     	hide_loading_message();
-    	show_message('Gagal memuat data: '+textStatus, 'error');
+    	show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
   	});
 
 	$(document).on('change', '#sortby', function(){
-		var valMonth = $(this).find(":selected").val();
-		setCookie("selectMonth", valMonth, 1);
+		report = $(this).attr('name');
+		startdate = $(this).find(":selected").val();
+		setCookie("report", report, 1);
+		setCookie("startdate", startdate, 1);
 	});
 
 	$(document).on('click', '#LoadData', function(){
-		var valMonth = $('#sortby').find(":selected").val();
-		setCookie("selectMonth", valMonth, 1);
+		report = $('#sortby').find(":selected").attr('data-name');
+		startdate = $('#sortby').find(":selected").val();
+		setCookie("report", report, 1);
+		setCookie("startdate", startdate, 1);
 		location.reload();
 	});
 
@@ -288,22 +292,22 @@ $(document).ready(function(){
 	/////////////////////////////////////////////////////////////////
 
 	var Getdata = $.ajax({
-		url: pathFile+"?"+Act+"=statistik_"+sLug+"&curMonth="+getCookie("selectMonth"),
-		cache: false,
-		dataType: 'json',
-		contentType: 'application/json; charset=utf-8',
-		type: 'get'
+		url: pathFile+"/metrics/static?report="+getCookie("report")+"&startdate="+getCookie("startdate")+"&enddate="+getCookie("enddate"),
+		type: "GET",
+		beforeSend: function (xhr) {
+			xhr.setRequestHeader('Authorization', getCookie('access_token'));
+			xhr.setRequestHeader('Content-Type', 'application/json');
+		}
 	});
 
 	Getdata.done(function(output){
-		if(output.result == 'success'){
-			$('.statistiPO').html(output.data[0].jml_po);
-            $('.statistiSPK').html(output.data[0].jml_wo);
-            $('.statistiSJ').html(output.data[0].jml_do);
-            $('.statistiFAKTUR').html(output.data[0].jml_in);
-            show_message("Berhasil memuat data.", 'success');
+		if(output.status == "success"){
+			$('.statistiPO').html(output.response.data[0].po_total);
+            $('.statistiSPK').html(output.response.data[0].wo_total);
+            $('.statistiSJ').html(output.response.data[0].do_total);
+            $('.statistiFAKTUR').html(output.response.data[0].inv_total);
 		} else {
-	        show_message('Gagal memuat data', 'error');
+	        show_message(output.message, 'error');
 		}
 	});
 

@@ -6,12 +6,12 @@ class HttpRequest {
 
     public function __construct($credential = null) {
         session_start();
-        $this->host     = "host.docker.internal";
-        $this->port     = "8082";
-        $this->endpoint = "/api/v1";
+        // $this->host     = "host.docker.internal";
+        $this->host     = $_COOKIE["base_url_api"];
+        $this->endpoint = $_COOKIE["base_path_api"];
+        $this->port     = $_COOKIE["base_port_api"];
         $this->token    = $credential;
         $this->token    = $_SESSION['id'];
-
 
         $this->baseurl  = rtrim($this->host .':'. $this->port . $this->endpoint);
     }

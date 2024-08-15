@@ -113,6 +113,8 @@ if($action != ''){
     $select = "SELECT a.item, a.price, a.qty AS req_qty, a.unit, b.id_fk, b.order_grade, b.customer, b.po_customer, b.po_date, c.ppn, d.no_so, d.item, d.size, d.unit, d.qore, d.lin, d.roll, d.ingredient, d.volume, d.porporasi, d.annotation, d.uk_bahan_baku, d.qty_bahan_baku, d.sources, d.merk, d.type, e.spk_date, f.no_delivery, f.send_qty, g.id_fk, g.id_sj, g.sj_date, g.courier, g.no_tracking, g.cost, h.order_status, i.company, j.isi FROM $tabel6 AS a LEFT JOIN $tabel1 AS b ON b.id_fk = a.id_fk LEFT JOIN $tabel7 AS c ON c.id_fk = b.id_fk LEFT JOIN $tabel8 AS d ON d.id_fk = a.id_fk AND d.item_to = a.item_to LEFT JOIN $tabel2 AS e ON e.id_fk = b.id_fk LEFT JOIN $tabel9 AS f ON f.id_fk = a.id_fk AND f.item_to = a.item_to LEFT JOIN $tabel3 AS g ON g.id_fk = b.id_fk AND g.id_sj = f.id_sj LEFT JOIN $tabel5 AS h ON h.id_fk = a.id_fk AND h.item_to = a.item_to LEFT JOIN company AS i ON i.id = b.id_company LEFT JOIN setting AS j ON j.id = d.detail WHERE b.po_date LIKE '$curMonth%' ORDER BY b.id, f.no_delivery ASC";
     $sql = $connect->query($select);
 
+    print_r($select);
+
     if(!$sql){
       $result  = $error;
       $message = $qerror;

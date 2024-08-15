@@ -18,9 +18,7 @@ $(document).ready(function(){
 	/////////////////////////
 
 	var idTablenya = $('#tablenya');
-	var pathFile = 'http://localhost:8082/api/v1/dashboard';
-	var Act = 'action';
-	var sLug = 'company';
+	var pathFile = decodeURIComponent(getCookie('base_url_api')) +':'+ getCookie('base_port_api') + decodeURIComponent(getCookie('base_path_api')) + decodeURIComponent(getCookie('base_dashboard_api'));
 	var FormsLug = 'COMPANY';
 	var IDForm = "#form_company";
 	var addButton = "#tambah_company";

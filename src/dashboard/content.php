@@ -48,7 +48,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
             <div class="icon">
               <i class="ion ion-bag"></i>
             </div>
-            <a href="file:///C|/xampp/htdocs/apps/dashboard/index.php?page=preorder" class="small-box-footer">Selengkapnya <i class="fa fa-arrow-circle-right"></i></a>
+            <a href="index.php?page=preorder" class="small-box-footer">Selengkapnya <i class="fa fa-arrow-circle-right"></i></a>
           </div>
         </div>
 
@@ -80,7 +80,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
             <div class="icon">
               <i class="ion ion-person-add"></i>
             </div>
-            <a href="file:///C|/xampp/htdocs/apps/dashboard/index.php?page=delivery_orders_done" class="small-box-footer">Selengkapnya <i class="fa fa-arrow-circle-right"></i></a>
+            <a href="index.php?page=delivery_orders_done" class="small-box-footer">Selengkapnya <i class="fa fa-arrow-circle-right"></i></a>
           </div>
         </div>
 
@@ -96,7 +96,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
             <div class="icon">
               <i class="ion ion-pie-graph"></i>
             </div>
-            <a href="file:///C|/xampp/htdocs/apps/dashboard/index.php?page=invoice_done" class="small-box-footer">Selengkapnya <i class="fa fa-arrow-circle-right"></i></a>
+            <a href="index.php?page=invoice_done" class="small-box-footer">Selengkapnya <i class="fa fa-arrow-circle-right"></i></a>
           </div>
         </div>
 
@@ -104,10 +104,9 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
         <?php if($_SESSION['role'] == '1' OR $_SESSION['email'] == 'iskandarwisnu7@gmail.com' OR $_SESSION['email'] == 'yudisepta3091@gmail.com' OR $_SESSION['email'] == 'riawidiastuti83@gmail.com'){ ?>
         <div class="col-lg-12">
-          <table id="tablenya" class="datatable nowrap" style="display: none">
+          <table id="tablenya" class="datatable nowrap">
             <thead>
               <tr>
-                <th>No</th>
                 <th>Company</th>
                 <th>Order Grade</th>
                 <th>No SO</th>
