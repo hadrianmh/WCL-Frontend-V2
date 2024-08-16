@@ -104,7 +104,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
         <?php if($_SESSION['role'] == '1' OR $_SESSION['email'] == 'iskandarwisnu7@gmail.com' OR $_SESSION['email'] == 'yudisepta3091@gmail.com' OR $_SESSION['email'] == 'riawidiastuti83@gmail.com'){ ?>
         <div class="col-lg-12">
-          <table id="tablenya" class="datatable nowrap">
+          <table id="tablenya" class="datatable nowrap" style="display:none">
             <thead>
               <tr>
                 <th>Company</th>
