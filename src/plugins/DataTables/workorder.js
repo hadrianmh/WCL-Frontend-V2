@@ -48,7 +48,7 @@ $(document).ready(function(){
 	/////////////////////////////////////////////////////////////////
 
 	var req = $.ajax({
-		url: pathFile+"/sortdata/archive?data=po_date&from=po_customer",
+		url: pathFile+"/sortdata/archive?data=po_date&from=preorder_customer",
 		type: "GET",
 		beforeSend: function (xhr) {
 			xhr.setRequestHeader('Authorization', getCookie('access_token'));
@@ -429,7 +429,7 @@ $(document).ready(function(){
 
 			var jsonData = {};
 			$.each(form_data, function(){
-				if(this.name == 'item_to' || this.name == 'order_status') {
+				if(this.name == 'order_status') {
 					value = parseInt(this.value)
 				} else {
 					value = this.value
@@ -438,6 +438,7 @@ $(document).ready(function(){
 			});
 			
 			jsonData.id = parseInt(ex[0]);
+			jsonData.item_to = parseInt(ex[1]);
 
 			var request   = $.ajax({
 				url:          pathFile+"/workorder",
@@ -476,110 +477,110 @@ $(document).ready(function(){
   	// Print view button
 	////////////////////
 
-	$(document).on('click', '.function_print a', function(e){
+	$(document).on('click', '.WoPrint', function(e){
 		e.preventDefault();
 	    show_loading_message();
 	    var idx		= $(this).data('id');
 	    var ex 		= idx.split('-');
 	    var request = $.ajax({
-	    	url:          pathFile+"?"+Act+"=get_print_"+sLug,
-	      	cache:        false,
-	      	data:         'id='+ex[0]+'&item_to='+ex[1],
-	      	dataType:     'json',
-	      	contentType:  'application/json; charset=utf-8',
-	      	type:         'get'
+	    	url:          pathFile+"/workorder/print/"+ex[0]+"/"+ex[1],
+			type:         'GET',
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
 	    });
 	    request.done(function(output){
-	    	if (output.result == sukses){
-	    		if(output.data[0].unit == 'PCS'){
-	    			var total_unit = output.data[0].total;
-					var lantotal_unit = "=    "+output.data[0].qty_produksi+" PCS";
-					var isiunit = output.data[0].unit+"/ROLL";
-	    			$('#isi').val(output.data[0].isi+" PCS");
+	    	if(output.status == "success"){
+	    		if(output.response.data[0].unit == 'PCS'){
+	    			var total_unit = output.response.data[0].ttl;
+					var lantotal_unit = "=    "+output.response.data[0].qty_produksi+" PCS";
+					var isiunit = output.response.data[0].unit+"/ROLL";
+	    			$('#isi').val(output.response.data[0].isi+" PCS");
 	    		}
-		        if(output.data[0].unit == 'ROLL'){
-		        	var total_unit = output.data[0].qty_produksi;
-					var lantotal_unit = "=    "+output.data[0].total+" PCS";
-					var isiunit = output.data[0].unit+"/ROLL";
-		        	$('#isi').val(output.data[0].isi+" PCS");		
+		        if(output.response.data[0].unit == 'ROLL'){
+		        	var total_unit = output.response.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.response.data[0].ttl+" PCS";
+					var isiunit = output.response.data[0].unit+"/ROLL";
+		        	$('#isi').val(output.response.data[0].isi+" PCS");		
 		        }
-				if(output.data[0].unit == 'PAK'){
-		        	var total_unit = output.data[0].qty_produksi;
-					var lantotal_unit = "=    "+output.data[0].total+" PCS";
-					var isiunit = output.data[0].unit+"/PAK";
-		        	$('#isi').val(output.data[0].isi+" PCS");		
+				if(output.response.data[0].unit == 'PAK'){
+		        	var total_unit = output.response.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.response.data[0].ttl+" PCS";
+					var isiunit = output.response.data[0].unit+"/PAK";
+		        	$('#isi').val(output.response.data[0].isi+" PCS");		
 		        }
-				if(output.data[0].unit == 'CM'){
-		        	var total_unit = output.data[0].qty_produksi;
-					var lantotal_unit = "=    "+output.data[0].total+" PCS";
-					var isiunit = output.data[0].unit+"/CM";
-		        	$('#isi').val(output.data[0].isi+" PCS");		
+				if(output.response.data[0].unit == 'CM'){
+		        	var total_unit = output.response.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.response.data[0].ttl+" PCS";
+					var isiunit = output.response.data[0].unit+"/CM";
+		        	$('#isi').val(output.response.data[0].isi+" PCS");		
 		        }
-				if(output.data[0].unit == 'MM'){
-		        	var total_unit = output.data[0].qty_produksi;
-					var lantotal_unit = "=    "+output.data[0].total+" PCS";
-					var isiunit = output.data[0].unit+"/MM";
-		        	$('#isi').val(output.data[0].isi+" PCS");		
+				if(output.response.data[0].unit == 'MM'){
+		        	var total_unit = output.response.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.response.data[0].ttl+" PCS";
+					var isiunit = output.response.data[0].unit+"/MM";
+		        	$('#isi').val(output.response.data[0].isi+" PCS");		
 		        }
-				if(output.data[0].unit == 'METER'){
-		        	var total_unit = output.data[0].qty_produksi;
-					var lantotal_unit = "=    "+output.data[0].total+" PCS";
-					var isiunit = output.data[0].unit+"/METER";
-		        	$('#isi').val(output.data[0].isi+" PCS");		
+				if(output.response.data[0].unit == 'METER'){
+		        	var total_unit = output.response.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.response.data[0].ttl+" PCS";
+					var isiunit = output.response.data[0].unit+"/METER";
+		        	$('#isi').val(output.response.data[0].isi+" PCS");		
 		        }
-				if(output.data[0].unit == 'DUSH'){
-		        	var total_unit = output.data[0].qty_produksi;
-					var lantotal_unit = "=    "+output.data[0].total+" PCS";
-					var isiunit = output.data[0].unit+"/DUS";
-		        	$('#isi').val(output.data[0].isi+" PCS");		
+				if(output.response.data[0].unit == 'DUSH'){
+		        	var total_unit = output.response.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.response.data[0].ttl+" PCS";
+					var isiunit = output.response.data[0].unit+"/DUS";
+		        	$('#isi').val(output.response.data[0].isi+" PCS");		
 		        }
-				if(output.data[0].unit == 'BOTOL'){
-		        	var total_unit = output.data[0].qty_produksi;
-					var lantotal_unit = "=    "+output.data[0].total+" PCS";
-					var isiunit = output.data[0].unit+"/BOTOL";
-		        	$('#isi').val(output.data[0].isi+" PCS");		
+				if(output.response.data[0].unit == 'BOTOL'){
+		        	var total_unit = output.response.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.response.data[0].ttl+" PCS";
+					var isiunit = output.response.data[0].unit+"/BOTOL";
+		        	$('#isi').val(output.response.data[0].isi+" PCS");		
 		        }
-				if(output.data[0].unit == 'UNIT'){
-		        	var total_unit = output.data[0].qty_produksi;
-					var lantotal_unit = "=    "+output.data[0].total+" PCS";
-					var isiunit = output.data[0].unit+"/UNIT";
-		        	$('#isi').val(output.data[0].isi+" PCS");		
+				if(output.response.data[0].unit == 'UNIT'){
+		        	var total_unit = output.response.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.response.data[0].ttl+" PCS";
+					var isiunit = output.response.data[0].unit+"/UNIT";
+		        	$('#isi').val(output.response.data[0].isi+" PCS");		
 		        }
-				if(output.data[0].unit == 'ONS'){
-		        	var total_unit = output.data[0].qty_produksi;
-					var lantotal_unit = "=    "+output.data[0].total+" PCS";
-					var isiunit = output.data[0].unit+"/ONS";
-		        	$('#isi').val(output.data[0].isi+" PCS");		
+				if(output.response.data[0].unit == 'ONS'){
+		        	var total_unit = output.response.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.response.data[0].ttl+" PCS";
+					var isiunit = output.response.data[0].unit+"/ONS";
+		        	$('#isi').val(output.response.data[0].isi+" PCS");		
 		        }
-				if(output.data[0].unit == 'KG'){
-		        	var total_unit = output.data[0].qty_produksi;
-					var lantotal_unit = "=    "+output.data[0].total+" PCS";
-					var isiunit = output.data[0].unit+"/KG";
-		        	$('#isi').val(output.data[0].isi+" PCS");		
+				if(output.response.data[0].unit == 'KG'){
+		        	var total_unit = output.response.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.response.data[0].ttl+" PCS";
+					var isiunit = output.response.data[0].unit+"/KG";
+		        	$('#isi').val(output.response.data[0].isi+" PCS");		
 		        }
-				if(output.data[0].unit == 'LITER'){
-		        	var total_unit = output.data[0].qty_produksi;
-					var lantotal_unit = "=    "+output.data[0].total+" PCS";
-					var isiunit = output.data[0].unit+"/LITER";
-		        	$('#isi').val(output.data[0].isi+" PCS");		
+				if(output.response.data[0].unit == 'LITER'){
+		        	var total_unit = output.response.data[0].qty_produksi;
+					var lantotal_unit = "=    "+output.response.data[0].ttl+" PCS";
+					var isiunit = output.response.data[0].unit+"/LITER";
+		        	$('#isi').val(output.response.data[0].isi+" PCS");		
 		        }
 	    		$('h2.FormTitle').text('PRATINJAU PRINT');
 	        	$('#form_print .field_container label.error').hide();
 	        	$('#form_print').attr('data-id', idx);
 	        	$('#form_print').attr('class', 'form printProses');
-	        	$('#tgl').val(output.data[0].spk_date);
-	        	$('#pcus').val(output.data[0].po_customer);
-	        	$('#custom').val(output.data[0].customer);
-	        	$('#nospk').val(output.data[0].no_spk);
-	        	$('#keterangan').val(output.data[0].annotation);
-	        	$('#size_label').val(output.data[0].size_label);
-	        	$('#bahan').val(output.data[0].bahan);
-	        	$('#gulungan').val(output.data[0].gulungan);
-	        	$('#kor').val(output.data[0].kor);
-	        	$('#lins').val(output.data[0].line);
-	        	$('#size_baku').val(output.data[0].size_baku);
-	        	$('#qty_baku').val(output.data[0].qty_baku);
-	        	$('#porporasi').val(output.data[0].porporasi);
+	        	$('#tgl').val(output.response.data[0].spk_date);
+	        	$('#pcus').val(output.response.data[0].po_customer);
+	        	$('#custom').val(output.response.data[0].customer);
+	        	$('#nospk').val(output.response.data[0].no_spk);
+	        	$('#keterangan').val(output.response.data[0].annotation);
+	        	$('#size_label').val(output.response.data[0].size);
+	        	$('#bahan').val(output.response.data[0].ingredient);
+	        	$('#gulungan').val(output.response.data[0].roll);
+	        	$('#kor').val(output.response.data[0].qore);
+	        	$('#lins').val(output.response.data[0].lin);
+	        	$('#size_baku').val(output.response.data[0].qty_bahan_baku);
+	        	$('#qty_baku').val(output.response.data[0].qty_bahan_baku);
+	        	$('#porporasi').val(output.response.data[0].porporasi);
 	        	$('#qty_produksi').val(total_unit);
 				$('#qty_produksi2').val(lantotal_unit);
 				$('#unit').text(isiunit);
@@ -587,12 +588,12 @@ $(document).ready(function(){
 	        	hide_loading_message();
 	      	} else {
 	        	hide_loading_message();
-	        	show_message('Gagal mengambil data', 'error');
+	        	show_message('Failed: '+output.response.message, 'error');
 	      	}
 	    });
 	    request.fail(function(jqXHR, textStatus){
 	    	hide_loading_message();
-	      	show_message('Gagal mengambil data: '+textStatus, 'error');
+			show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	    });
 	});
 
@@ -607,34 +608,51 @@ $(document).ready(function(){
 	      	hide_ipad_keyboard();
 	      	hide_lightbox();
 	      	show_loading_message();
-	      	var form_data 	= $('#form_print').serialize();
+			var id		= $('#form_print').attr('data-id');
+			var form_data 	= $('#form_print').serializeArray();
+
+			var jsonData = {};
+			$.each(form_data, function(){
+				if(this.name == 'isi' || this.name == 'qty_produksi') {
+					value = parseInt(this.value)
+				} else {
+					value = this.value
+				}
+				jsonData[this.name] = value;
+			});
+			
+			// jsonData.id = parseInt(ex[0]);
+			// jsonData.item_to = parseInt(ex[1]);
+			  
 	      	$.ajax({
-	        	url: 	pathFile+"?"+Act+"=print",
-	        	cache:  false,
-	        	data:   form_data,
-	        	type: 'POST',
-	        	success: function(respon){
-	        		var obj = JSON.parse(respon);
-	        		if(obj.result == 'success'){
+	        	url:	pathFile+"/workorder/print",
+				type:	'POST',
+				data:	JSON.stringify(jsonData),
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				},
+	        	success: function(output){
+	        		if(output.status == "success"){
 	        			hide_loading_message();
 	        			$('#PrintModal').show();
-	        			$(".spkdate").text(obj.data[0].spk_date);
-	        			$(".pcus").text(obj.data[0].po_customer);
-	        			$(".cus").text(obj.data[0].customer);
-	        			$(".spk").text(obj.data[0].no_spk);
-	        			$(".ann").text(obj.data[0].annotation);
-	        			$(".slabel").text(obj.data[0].size_label);
-	        			$(".sbaku").text(obj.data[0].size_baku);
-	        			$(".bah").text(obj.data[0].bahan);
-	        			$(".gul").text(obj.data[0].gulungan);
-	        			$(".kore").text(obj.data[0].kor);
-	        			$(".lie").text(obj.data[0].line);
-	        			$(".por").text(obj.data[0].porporasi);
-	        			$(".qbaku").text(obj.data[0].qty_baku);
-	        			$(".qproduk").text(obj.data[0].qty_produksi + " " + satuanunit.value + " " + qty_produksi2.value);
+	        			$(".spkdate").text(output.response.data[0].spk_date);
+	        			$(".pcus").text(output.response.data[0].po_customer);
+	        			$(".cus").text(output.response.data[0].customer);
+	        			$(".spk").text(output.response.data[0].no_spk);
+	        			$(".ann").text(output.response.data[0].annotation);
+	        			$(".slabel").text(output.response.data[0].size);
+	        			$(".sbaku").text(output.response.data[0].uk_bahan_baku);
+	        			$(".bah").text(output.response.data[0].ingredient);
+	        			$(".gul").text(output.response.data[0].roll);
+	        			$(".kore").text(output.response.data[0].qore);
+	        			$(".lie").text(output.response.data[0].lin);
+	        			$(".por").text(output.response.data[0].porporasi);
+	        			$(".qbaku").text(output.response.data[0].qty_bahan_baku);
+	        			$(".qproduk").text(output.response.data[0].qty_produksi + " " + satuanunit.value + " " + qty_produksi2.value);
 						$(".isiuni").text(satuanunit.value);
-	        			$(".is").text(obj.data[0].isi);
-	        			$(".td").text(obj.data[0].ttd);
+	        			$(".is").text(output.response.data[0].isi);
+	        			$(".td").text(output.response.data[0].ttd);
 
 		        		$('.printnow').print({
 		                    stylesheet : "../lib/css/bootstrap/bootstrap.min.css",

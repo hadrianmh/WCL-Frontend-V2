@@ -48,7 +48,7 @@ $(document).ready(function(){
 	/////////////////////////////////////////////////////////////////
 
 	var req = $.ajax({
-		url: pathFile+"/sortdata/archive?data=po_date&from=po_customer",
+		url: pathFile+"/sortdata/archive?data=po_date&from=preorder_customer",
 		type: "GET",
 		beforeSend: function (xhr) {
 			xhr.setRequestHeader('Authorization', getCookie('access_token'));

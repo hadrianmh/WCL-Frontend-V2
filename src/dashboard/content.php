@@ -1647,43 +1647,43 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                 
                 <div class="form-group">
                   <label for="tgl">Tanggal: <span class="required">*</span></label>
-                  <input type="date" class="form-control" name="tgl" id="tgl" required>
+                  <input type="date" class="form-control" name="spk_date" id="tgl" required>
                 </div>
 
                 <hr>
                 <p style="font-weight: bold">RINCIAN PRODUKSI</p>
                 <div class="form-group">
                   <label for="pcus">No PO: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="pcus" id="pcus" readonly>
+                  <input type="text" class="form-control" name="po_customer" id="pcus" readonly>
                 </div>
                 <div class="form-group">
                   <label for="customer">Customer: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="custom" id="custom" required readonly>
+                  <input type="text" class="form-control" name="customer" id="custom" required readonly>
                 </div>
 
                 <div class="form-group">
                   <label for="no_spk">No SO: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="nospk" id="nospk" required readonly>
+                  <input type="text" class="form-control" name="no_spk" id="nospk" required readonly>
                 </div>
         
                 <div class="form-group">
                   <label for="keterangan">Keterangan:</label>
-                  <input type="text" class="form-control" name="keterangan" id="keterangan">
+                  <input type="text" class="form-control" name="annotation" id="keterangan">
                 </div>
         
                 <div class="form-group">
                   <label for="size_label">Ukuran:<span class="required">*</span></label>
-                  <input type="text" class="form-control" name="size_label" id="size_label" required readonly>
+                  <input type="text" class="form-control" name="size" id="size_label" required readonly>
                 </div>
         
                 <div class="form-group">
                   <label for="size_baku">Uk. Bahan baku:</label>
-                  <input type="text" class="form-control" name="size_baku" id="size_baku" required readonly>
+                  <input type="text" class="form-control" name="uk_bahan_baku" id="size_baku" required readonly>
                 </div>
         
                 <div class="form-group">
                   <label for="bahan">Bahan: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="bahan" id="bahan" required readonly>
+                  <input type="text" class="form-control" name="ingredient" id="bahan" required readonly>
                 </div>
 
                 <div class="form-group porporasi">
@@ -1693,22 +1693,22 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
         
                 <div class="form-group">
                   <label for="gulungan">Gulungan: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="gulungan" id="gulungan" required readonly>
+                  <input type="text" class="form-control" name="roll" id="gulungan" required readonly>
                 </div>
         
                 <div class="form-group">
                   <label for="kor">Kor: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="kor" id="kor" required readonly>
+                  <input type="text" class="form-control" name="qore" id="kor" required readonly>
                 </div>
         
                 <div class="form-group">
                   <label for="lins">Line: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="lins" id="lins" required readonly>
+                  <input type="text" class="form-control" name="lin" id="lins" required readonly>
                 </div>
         
                 <div class="form-group">
                   <label for="qty_baku">QTY Bahan baku:</label>
-                  <input type="text" class="form-control" name="qty_baku" id="qty_baku" required readonly>
+                  <input type="text" class="form-control" name="qty_bahan_baku" id="qty_baku" required readonly>
                 </div>
         
                 <div class="form-group">
