@@ -12,5 +12,5 @@ $base_url = !empty($_COOKIE['base_url']) ? $_COOKIE['base_url'] : 'http://localh
 $base_path = !empty($_COOKIE['base_path']) ? $_COOKIE['base_path'] : '';
 $base_port = !empty($_COOKIE['base_port']) ? $_COOKIE['base_port'] : '80';
 
-header("Location: ".$base_url .":". $base_port . $base_path);
+header("Location: ". rawurldecode($base_url) .":". $base_port . rawurldecode($base_path));
 ?>
