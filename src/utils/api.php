@@ -6,9 +6,9 @@ class HttpRequest {
 
     public function __construct($credential = null) {
         // $this->host     = "host.docker.internal";
-        $this->host     = $_COOKIE["base_url_api"];
-        $this->endpoint = $_COOKIE["base_path_api"];
-        $this->port     = $_COOKIE["base_port_api"];
+        $this->host     = empty($_COOKIE["base_url_api"]) ? '':$_COOKIE["base_url_api"];
+        $this->endpoint = empty($_COOKIE["base_path_api"])? '':$_COOKIE["base_path_api"];
+        $this->port     = empty($_COOKIE["base_port_api"])? '':$_COOKIE["base_port_api"];
         $this->baseurl  = rtrim($this->host .':'. $this->port . $this->endpoint);
 
         $this->token    = $credential;
