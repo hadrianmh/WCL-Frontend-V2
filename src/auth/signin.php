@@ -19,7 +19,7 @@ if (file_exists($configfile)) {
 		if(!empty($_POST['email']) AND !empty($_POST['password']) AND !empty($_POST['code']))
 		{
 			session_start();
-			if($_SESSION['digit'] == $_POST['code'])
+			if((empty($_SESSION['digit']) ? '' : $_SESSION['digit']) == $_POST['code'])
 			{
 				$email = $_POST['email'];
 				$pass = $_POST['password'];
