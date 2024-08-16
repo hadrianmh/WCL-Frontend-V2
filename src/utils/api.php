@@ -5,6 +5,7 @@ class HttpRequest {
     private $token;
 
     public function __construct($credential = null) {
+        session_start();
         // $this->host     = "host.docker.internal";
         $this->host     = $_COOKIE["base_url_api"];
         $this->endpoint = $_COOKIE["base_path_api"];
