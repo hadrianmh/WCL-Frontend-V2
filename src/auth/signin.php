@@ -15,9 +15,6 @@ if (file_exists($configfile)) {
 		setcookie('base_path_api', $ENV["base_path_api"], time() + (10 * 365 * 24 * 60 * 60), "/");
 		setcookie('base_port_api', $ENV["base_port_api"], time() + (10 * 365 * 24 * 60 * 60), "/");
 		setcookie('base_dashboard_api', $ENV["base_dashboard_api"], time() + (10 * 365 * 24 * 60 * 60), "/");
-		$_SESSION['base_url_api'] = $ENV["base_url_api"];
-		$_SESSION['base_path_api'] = $ENV["base_path_api"];
-		$_SESSION['base_port_api'] = $ENV["base_port_api"];
 
 		if(!empty($_POST['email']) AND !empty($_POST['password']) AND !empty($_POST['code']))
 		{
