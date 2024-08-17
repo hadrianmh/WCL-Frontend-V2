@@ -1124,7 +1124,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
         <div class ="container-fluid">
           <?php if($_SESSION['role'] != '5'){ ?>
             <button type="button" class="button" id="add_inputPO">Create New</button>
-            <button type="button" class="button" id="add_item_po">Add Item</button>
+            <button type="button" class="button" id="add_item_po">Add Item PO</button>
           <?php } ?>
           <table id="tablenya" class="datatable" style="width:100%">
             <caption>
@@ -1229,6 +1229,8 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                   <label for="customer">Customer: <span class="required">*</span></label>
                   <input type="text" class="form-control" name="customer" id="customer" required>
                   <input type="hidden" name="customerid" id="id_customer" value="">
+                  <input type="hidden" name="fkid" id="fkid" value="">
+                  <input type="hidden" name="poid" id="poid" value="">
                 </div>
 
                 <div class="form-group po_date">
@@ -4428,7 +4430,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
             </caption>
             <thead>
               <tr>
-                  <th>No</th>
                   <th>Tgl Surat Jalan</th>
                   <th>Surat Jalan</th>
                   <th>Customer</th>
@@ -4443,29 +4444,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                   <th>Ongkir</th>
                   <th>Diinput</th>
                   <th>Option</th>
-              </tr>
-            </thead>
-            <tbody>
-            </tbody>
-          </table>
-
-          <table id="tablePrint" class="datatable nowrap" style="display: none">
-            <thead>
-              <tr>
-                  <th>No</th>
-                  <th>Tgl Surat Jalan</th>
-                  <th>Surat Jalan</th>
-                  <th>Customer</th>
-                  <th>No PO</th>
-                  <th>No SO</th>
-                  <th>Ship To</th>
-                  <th>Nama Barang</th>
-                  <th>Qty</th>
-                  <th>Satuan</th>
-                  <th>Kurir</th>
-                  <th>No Resi</th>
-                  <th>Ongkir</th>
-                  <th>Diinput</th>
               </tr>
             </thead>
             <tbody>
@@ -4507,7 +4485,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group shipto">
                   <label for="phone">Note:</label>
-                  <input type="text" class="form-control" name="phone" id="telp" required >
+                  <input type="text" class="form-control" name="phone" id="telp" required>
                 </div>
 
                 <div class="form-group shipto">
@@ -4559,17 +4537,18 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group">
                   <label>Dari Tanggal: <span class="required">*</span></label>
-                  <input type="date" class="form-control" name="dari" id="dari" required>
+                  <input type="date" class="form-control" name="startdate" id="startdate" required>
                 </div>
 
                 <div class="form-group">
                   <label>Sampai: <span class="required">*</span></label>
-                  <input type="date" class="form-control" name="sampai" id="sampai" required>
+                  <input type="date" class="form-control" name="enddate" id="enddate" required>
                 </div>
         
                 <div class="button_container" style="text-align: center">
                   <button type="submit" class="lihat">View</button>
                   <input type="button" class="periode_close" value="Cancel">
+                  <input type="hidden" id="report" name="report" value="periode">
                 </div>
               </form>
             </div>
@@ -4698,7 +4677,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
           <table id="tablenya" class="datatable" style="width:100%">
             <thead>
               <tr>
-                  <th>No</th>
                   <th>Tgl SPK</th>
                   <th>Customer</th>
                   <th>No PO</th>
@@ -4741,9 +4719,9 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                   <input type="text" class="form-control" name="no_sj" id="no_sj" value="" readonly>
                 </div>
                 
-                <div class="form-group tanggal">
+                <div class="form-group sj_date">
                   <label for="tanggal">Tgl Surat Jalan: <span class="required">*</span></label>
-                  <input type="date" class="form-control" name="tanggal" id="tanggal" value="<?php echo date('Y-m-d'); ?>" required>
+                  <input type="date" class="form-control" name="sj_date" id="sj_date" value="<?php echo date('Y-m-d'); ?>" required>
                 </div>
 
                 <div class="form-group shipto">
@@ -4753,14 +4731,14 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="datanyanih"></div><hr>
 
-                <div class="form-group nama_kurir">
+                <div class="form-group courier">
                   <label for="nama_kurir">Courier Name: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="nama_kurir" id="nama_kurir" required>
+                  <input type="text" class="form-control" name="courier" id="courier" required>
                 </div>
 
-                <div class="form-group no_resi">
+                <div class="form-group resi">
                   <label for="no_resi">No Tracking:</label>
-                  <input type="text" class="form-control" name="no_resi" id="no_resi">
+                  <input type="text" class="form-control" name="resi" id="resi">
                 </div>
 
                 <div class="button_container" style="text-align: center">

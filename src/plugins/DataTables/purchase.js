@@ -157,8 +157,13 @@ $(document).ready(function(){
 		"serverSide" : true,
 		"scrollX": true,
 	    "ajax": {
-			"url" : pathFile+"/purchase-order?report="+getCookie("report")+"&startdate="+getCookie("startdate")+"&enddate="+getCookie("enddate"),
+			"url" : pathFile+"/purchase-order",
 			"type": "GET",
+			data: {
+				report : getCookie("report"),
+				startdate: getCookie("startdate"),
+				enddate: getCookie("enddate")
+			},
 			"dataFilter": function(data) {
 				var obj = JSON.parse(data);
 				obj.data = obj.response.data;
@@ -352,6 +357,7 @@ $(document).ready(function(){
 		$('#unit').val('');
 		$('#note').val('');
 		$('#ppns').val('0');
+		$('.po_type').val('');
 		$('#looping_barang').empty();
 		$('.logo_surat').empty();
 		$('.tbody').empty();
@@ -407,7 +413,9 @@ $(document).ready(function(){
 		$('#id_vendor').attr('readonly', false);
 		$('#po_date').attr('readonly', false);
 		$('#po_type_add_item').attr('id', 'po_type');
-		document.getElementById("po_type").disabled = false;
+		if(document.getElementById("po_type")){
+			document.getElementById("po_type").disabled = false;
+		}
 		$('#detail').attr('readonly', false);
 		$('#size').attr('readonly', false);
 		$('#merk').attr('readonly', false);
@@ -663,7 +671,6 @@ $(document).ready(function(){
 
   	$(document).on('submit', '#form_AddItemPO.add', function(e){
     	e.preventDefault();
-    	// Validate form
     	if (FormNYA.valid() == true)
 		{
       		hide_ipad_keyboard();
@@ -969,7 +976,7 @@ $(document).ready(function(){
 					arr.push(matches[1]);
 				}
 			} else {
-				var value = (item.name === 'companyid' || item.name === 'vendorid')? parseInt(item.value) : item.value; 
+				var value = (item.name === 'companyid' || item.name === 'vendorid' || item.name === 'fkid')? parseInt(item.value) : item.value; 
 				formDataObject[item.name] = value;
 			}
 		});
@@ -997,7 +1004,6 @@ $(document).ready(function(){
 	        		show_message("'"+Infos+"' berhasil dimasukan.", 'success');
 	        		$('#company').empty();
 	        		$('#po_type').empty();
-	        		$('.po_type').empty();
 	        		reset();
 	        		clean();
 	      		}, true);

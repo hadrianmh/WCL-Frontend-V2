@@ -32,15 +32,20 @@ $(document).ready(function(){
 			$resetButton = $(`<button class="btn btn-default"><i class="fa fa-times"></i></button>`).click(function() { input.val('');$searchButton.click(); }); 
 			$('.dataTables_filter').append($searchButton, $resetButton);
 		},
-		"scrollX": true,
+		"scrollX": false,
 		"serverSide" : true,
 		"searching": false,
 		"paging":   false,
         "ordering": false,
         "info":     false,
 	    "ajax": {
-			"url" : pathFile+"/metrics/so-tracking?report="+getCookie("report")+"&startdate="+getCookie("startdate")+"&enddate="+getCookie("enddate"),
+			"url" : pathFile+"/metrics/so-tracking",
 			"type": "GET",
+			data: {
+				report : getCookie("report"),
+				startdate: getCookie("startdate"),
+				enddate: getCookie("enddate")
+			},
 			"dataFilter": function(data) {
 				var obj = JSON.parse(data);
 				obj.data = obj.response.data;
@@ -292,8 +297,13 @@ $(document).ready(function(){
 	/////////////////////////////////////////////////////////////////
 
 	var Getdata = $.ajax({
-		url: pathFile+"/metrics/static?report="+getCookie("report")+"&startdate="+getCookie("startdate")+"&enddate="+getCookie("enddate"),
+		url: pathFile+"/metrics/static",
 		type: "GET",
+		data: {
+			report : getCookie("report"),
+			startdate: getCookie("startdate"),
+			enddate: getCookie("enddate")
+		},
 		beforeSend: function (xhr) {
 			xhr.setRequestHeader('Authorization', getCookie('access_token'));
 			xhr.setRequestHeader('Content-Type', 'application/json');

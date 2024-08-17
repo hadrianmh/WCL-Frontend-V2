@@ -108,8 +108,13 @@ $(document).ready(function(){
 		"serverSide" : true,
 		"scrollX": true,
 	    "ajax": {
-			"url" : pathFile+"/workorder?report="+getCookie("report")+"&startdate="+getCookie("startdate")+"&enddate="+getCookie("enddate"),
+			"url" : pathFile+"/workorder",
 			"type": "GET",
+			data: {
+				report : getCookie("report"),
+				startdate: getCookie("startdate"),
+				enddate: getCookie("enddate")
+			},
 			"dataFilter": function(data) {
 				var obj = JSON.parse(data);
 				obj.data = obj.response.data;
@@ -132,7 +137,7 @@ $(document).ready(function(){
 			"error": function (xhr, error, thrown) {
 				console.error('Error fetching data:', xhr, error, thrown);
 				alert('Terjadi kesalahan, silahkan login kembali.');
-				// window.location.href = '/auth/signout.php';
+				window.location.href = '/auth/signout.php';
 			}
 		},
 		'columnDefs': [
@@ -666,11 +671,11 @@ $(document).ready(function(){
 
 	        		} else {
 	        			hide_loading_message();
-	      				show_message('Print gagal.', 'error');
+						show_message('Failed: '+output.response.message, 'error');
 	        		}
 	        	},
 		        error: function(jqXHR, textStatus, errorThrown){
-		            show_message('Print gagal: '+textStatus, 'error');
+		            show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 		        }
 	      	});
 	    }

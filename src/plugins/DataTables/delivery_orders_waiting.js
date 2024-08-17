@@ -5,12 +5,9 @@ $(document).ready(function(){
 	/////////////////////////
 
 	var idTablenya = $('#tablenya');
-	var pathFile = '../auth/delivery_orders_waiting.php';
-	var Act = 'action';
-	var sLug = 'delivery_orders_waiting';
+	var pathFile = decodeURIComponent(getCookie('base_url_api')) +':'+ getCookie('base_port_api') + decodeURIComponent(getCookie('base_path_api')) + decodeURIComponent(getCookie('base_dashboard_api'));
 	var FormsLug = 'SURAT JALAN';
 	var IDForm = "#form_inputSJ";
-	var prosesButton = ".function_process a";
 
 	//Message alert
 	var sukses = 'success';
@@ -82,22 +79,63 @@ $(document).ready(function(){
 	}
 
 	var tablenya = idTablenya.dataTable({
+		initComplete : function() {
+			var input = $('.dataTables_filter input').unbind(),
+			self = this.api(),
+			$searchButton = $(`<button class="btn btn-default"><i class="fa fa-search"></i></button>`).click(function(){ self.search(input.val()).draw(); });
+			$resetButton = $(`<button class="btn btn-default"><i class="fa fa-times"></i></button>`).click(function() { input.val('');$searchButton.click(); }); 
+			$('.dataTables_filter').append($searchButton, $resetButton);
+		},
+		"ajax": {
+			"url" : pathFile+"/delivery-order/waiting",
+			"type": "GET",
+			"dataFilter": function(data) {
+				var obj = JSON.parse(data);
+				obj.data = obj.response.data;
+				obj.recordsTotal = obj.response.recordsTotal;
+				obj.recordsFiltered = obj.response.recordsFiltered;
+				return JSON.stringify( obj );
+			},
+			"dataSrc": function (json) {
+				if(json.code == 200) {
+					return json.response.data;
+				} else {
+					console.error('Error fetching data:', json);
+					return [];
+				}
+            },
+			"beforeSend": function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			},
+			"error": function (xhr, error, thrown) {
+				console.error('Error fetching data:', xhr, error, thrown);
+				alert('Terjadi kesalahan, silahkan login kembali.');
+				window.location.href = '/auth/signout.php';
+			}
+		},
+		"serverSide" : true,
 		"scrollX": true,
-	    "ajax": pathFile+"?"+Act+"=result_"+sLug,
 	    'columnDefs': [
 	    	{
-	    		'targets': [0,1,2,3,5,6],
+	    		'targets': [0,1,2,4,5],
 	            'className': 'dt-nowrap'
-	        }
+	        },
+			{
+				"targets": 5,
+				"data": null,
+				"defaultContent": "",
+				"render": function (data, type, row) {
+					return '<button class="btn btn-default function_process" data-id="'+ data.id +'"><i class="fa fa-share"></i></button>';
+				}
+			}
 	    ],
 	    "columns": [
-	      { "data": "no" },
-	      { "data": "spk_date"},
-	      { "data": "customer"},
-	      { "data": "po_customer"},
-	      { "data": "no_spk"},
-	      { "data": "duration"},
-	      { "data": "functions","sClass": "functions" }
+			{ "data": "spk_date"},
+			{ "data": "customer"},
+			{ "data": "po_customer"},
+			{ "data": "no_so"},
+			{ "data": "duration"},
 	    ],
 	    "lengthMenu": [[10, -1], [10, "All"]],
 	    iDisplayLength: 10,
@@ -132,47 +170,48 @@ $(document).ready(function(){
   	// Proses DO button
 	///////////////////////////////////////////////////////////
 
-	$(document).on('click', prosesButton, function(e){
+	$(document).on('click', '.function_process', function(e){
 		e.preventDefault();
 		show_loading_message();
 	    var id      = $(this).data('id');
 	    var request = $.ajax({
-	    	url:          pathFile+"?"+Act+"=get_"+sLug,
-	      	cache:        false,
-	      	data:         'id='+id,
-	      	dataType:     'json',
-	      	contentType:  'application/json; charset=utf-8',
-	      	type:         'get'
-	    });
+			url:          pathFile+"/delivery-order/item/"+id,
+			type:         'GET',
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
+		  });
 	    request.done(function(output){
-	    	if (output.result == sukses){
-	    		$('H2.FormTitle').text('INPUT '+FormsLug);
+	    	if(output.status == "success"){
+				$('H2.FormTitle').text('INPUT '+FormsLug);
 				$(IDForm).attr('class', 'form ProsesSJ');
 	        	$(IDForm +'').attr('data-id', id);
-	        	$('#spk_date').val(output.data[0].spk_date);
-		        $('#customer').val(output.data[0].customer);
-		        $('#po_customer').val(output.data[0].po_customer);
-	        	$('#shipto').val(output.data[0].shipto);
-	        	for(var i = 0; i<output.data.length; i++){
-	        		if(output.data[i].req_qty == 0){
+	        	$('#spk_date').val(output.response.data[0].spk_date);
+		        $('#customer').val(output.response.data[0].customer);
+		        $('#po_customer').val(output.response.data[0].po_customer);
+	        	$('#shipto').val(output.response.data[0].shipto);
+	        	for(var i = 0; i<output.response.data.length; i++){
+	        		if(output.response.data[i].req_qty == 0){
 	        			var inputQTY = '<input type="number" class="form-control" name="data[qty][]" id="qty" value="0" readonly>';
 	        		} else {
 	        			var inputQTY = '<input type="number" min="0" class="form-control" name="data[qty][]" id="qty" placeholder="0" required>';
 	        		}
 
 	        		$('.datanyanih').append(
-		        		'<div class="looping-item"><hr><div class="form-group no_spk"><label for="no_spk">No SO: <span class="required">*</span></label><input type="text" class="form-control" name="no_so" id="no_so" value="'+output.data[i].no_so+'" readonly></div><div class="form-group"><label for="item">Nama Barang:</label><input type="text" class="form-control" name="data[item][]" id="item" value="'+output.data[i].item+'" readonly></div><div class="form-group"><label for="req_qty">Request qty:</label><input type="text" class="form-control" name="data[req_qty][]" id="req_qty" value="'+output.data[i].req_qty+'" readonly></div><div class="form-group"><label for="qty">Send qty: <span class="required">*</span></label>'+inputQTY+'</div><div class="form-group"><label for="Unit">Satuan:</label><input type="text" class="form-control" name="data[unit][]" id="unit" value="'+output.data[i].unit+'" readonly></div><input type="hidden" class="form-control" name="data[item_to][]" id="item_to" value="'+output.data[i].item_to+'"></div>'
+		        		'<div class="looping-item"><hr><div class="form-group no_spk"><label for="no_spk">No SO: <span class="required">*</span></label><input type="text" class="form-control" name="no_so" id="no_so" value="'+output.response.data[i].no_so+'" readonly></div><div class="form-group"><label for="item">Nama Barang:</label><input type="text" class="form-control" name="data[item][]" id="item" value="'+output.response.data[i].item+'" readonly></div><div class="form-group"><label for="req_qty">Request qty:</label><input type="text" class="form-control" name="data[req_qty][]" id="req_qty" value="'+output.response.data[i].req_qty+'" readonly></div><div class="form-group"><label for="qty">Send qty: <span class="required">*</span></label>'+inputQTY+'</div><div class="form-group"><label for="Unit">Satuan:</label><input type="text" class="form-control" name="data[unit][]" id="unit" value="'+output.response.data[i].unit+'" readonly></div><input type="hidden" class="form-control" name="data[item_to][]" id="item_to" value="'+output.response.data[i].item_to+'"></div>'
 		        		);
 	        	}
 
 	        	$.ajax({
-	        		url:			pathFile+"?"+Act+"=no_sj_"+sLug,
-	        		cache:      	false,
-	        		dataType:		'json',
-	        		contentType:	'application/json; charset=utf-8',
-	        		type:			'get',
-	        		success: function(get_nosj){
-	        			$('#no_sj').val(get_nosj.data);
+					url: pathFile+"/delivery-order/number",
+					type:'GET',
+					beforeSend: function (xhr) {
+						xhr.setRequestHeader('Authorization', getCookie('access_token'));
+						xhr.setRequestHeader('Content-Type', 'application/json');
+					},
+	        		success: function(output){
+	        			$('#no_sj').val(output.response.data[0].no_sj);
 	        			show_lightbox();
 	        			hide_loading_message();
 	        		}
@@ -180,13 +219,13 @@ $(document).ready(function(){
 
 	    	} else {
 	    		hide_loading_message();
-	        	show_message('Gagal mengambil data', 'error');
+	        	show_message('Failed: '+output.response.message, 'error');
 	    	}
 
 	    });
 	    request.fail(function(jqXHR, textStatus){
 	    	hide_loading_message();
-	      	show_message('Gagal mengambil data: '+textStatus, 'error');
+			show_message('Gagal mengambil data: '+textStatus, 'error');
 	      	clean_value_elemen();
 	    });
 	});
@@ -202,33 +241,73 @@ $(document).ready(function(){
       		hide_ipad_keyboard();
       		hide_lightbox();
       		show_loading_message();
-      		var id        = $(IDForm).attr('data-id');
-      		var form_data = $(IDForm).serialize();
+			var id = $(IDForm).attr('data-id');
+			var formDataArray = $(this).serializeArray();
+			var formDataObject = {
+				items: []
+			};
+
+			var arr = [];
+			var dataGroups = {};
+
+			formDataArray.forEach(function(item) {
+				if (item.name.startsWith("data[")) {
+					var matches = item.name.match(/data\[([^\]]+)\]\[(\d*)\]/);
+					if (matches) {
+						let count = arr.reduce(function(accumulator, currentValue) {
+							return currentValue === matches[1] ? accumulator + 1 : accumulator;
+						}, 0);
+
+						var fieldName = matches[1];
+						var index = count;
+		
+						if (!dataGroups[index]) {
+							dataGroups[index] = {};
+						}
+		
+						var value = (fieldName === 'qty' || fieldName === 'item_to')? parseInt(item.value): item.value;
+						dataGroups[index][fieldName] = value;
+						arr.push(matches[1]);
+					}
+
+				} else {
+					var value = (item.name === 'order_grade' || item.name === 'tax' || item.name === 'customerid' || item.name === 'companyid')? parseInt(item.value) : item.value; 
+					formDataObject[item.name] = value;
+				}
+			});
+
+			formDataObject.id = parseInt(id);
+
+			for (var key in dataGroups) {
+				formDataObject.items.push(dataGroups[key]);
+			}
+
       		var request   = $.ajax({
-        		url:          pathFile+"?"+Act+"=add_"+sLug+"&id="+id,
-        		cache:        false,
-        		data:         form_data,
-        		dataType:     'json',
-        		contentType:  'application/json; charset=utf-8',
-        		type:         'get'
+				url:          pathFile+"/delivery-order",
+				type:         'POST',
+				data:         JSON.stringify(formDataObject, null, 2),
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
      		});
       		request.done(function(output){
-        		if (output.result == sukses){
+        		if(output.status == "success"){
           			tablenya.api().ajax.reload(function(){
             			hide_loading_message();
             			var Infos = $('#customer').val();
-            			show_message("'"+Infos+"' berhasil diproses.", 'success');
+            			show_message("'"+Infos+"' create successfully.", 'success');
           			}, true);
           			clean_value_elemen();
         		} else {
           			hide_loading_message();
-          			show_message('Gagal diproses', 'error');
+          			show_message('Failed: '+output.response.message, 'error');
           			clean_value_elemen();
         		}
       		});
      		request.fail(function(jqXHR, textStatus){
         		hide_loading_message();
-        		show_message('Gagal diproses: '+textStatus, 'error');
+        		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
         		clean_value_elemen();
       		});
     	}

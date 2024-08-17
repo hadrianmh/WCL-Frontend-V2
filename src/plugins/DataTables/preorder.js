@@ -154,8 +154,13 @@ $(document).ready(function(){
 		"serverSide" : true,
 		"scrollX": true,
 	    "ajax": {
-			"url" : pathFile+"/sales-order?report="+getCookie("report")+"&startdate="+getCookie("startdate")+"&enddate="+getCookie("enddate"),
+			"url" : pathFile+"/sales-order",
 			"type": "GET",
+			data: {
+				report : getCookie("report"),
+				startdate: getCookie("startdate"),
+				enddate: getCookie("enddate")
+			},
 			"dataFilter": function(data) {
 				var obj = JSON.parse(data);
 				obj.data = obj.response.data;
@@ -657,25 +662,26 @@ $(document).ready(function(){
   		hidden_input();
   		var id = $(this).val();
   		if(id)
-  		{
+		{
   			var attributeGET = $.ajax({
-	  			url : '../auth/json.php',
-	  			dataType: 'JSON',
-	  			type : 'GET',
-	  			contentType: 'application/json; charset=utf-8',
-	  			cache: false,
-	  			data: {
-	  				req: 'so_attribute',
-	  				id: id
-	  			}
+				url:          pathFile+"/sales-order/suggest/so?id="+id,
+				type:         'GET',
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
 	  		});
 
 	  		attributeGET.done(function(output){
-	  			var split = output[0].field.split(',');
-	  			for(var loop = 0; loop < split.length; loop++)
-	  			{
-	  				$('.'+split[loop]).show();
-	  			}
+				if(output.status == "success"){
+					console.log(output);
+					var split = output.response.data.field.split(',');
+					for(var loop = 0; loop < split.length; loop++)
+					{
+						$('.'+split[loop]).show();
+					}
+				}
+				show_message('Failed: '+output.response.message, 'error');
 	  		});
 
 	  		attributeGET.fail(function(jqXHR, textStatus)
@@ -687,11 +693,237 @@ $(document).ready(function(){
   	});
 
 	///////////////////////////////////////////////////////
+	// 
+  	//////////////////////////////////////////////////////
+
+  	$(document).on('click', '#add_item_po', function(e){
+		e.preventDefault();
+		$(IDForm).attr('id', 'form_AddItemPO');
+		$('H2.FormTitle').text('ADD ITEM '+FormsLug);
+		$('#form_AddItemPO').attr('class', 'form add');
+		$('#form_AddItemPO').attr('data-id', '');
+		$('.company').hide();
+		$('.customer').show();
+		$('.po_date').hide();
+		$('.po_customer').hide();
+		$('.order_grade').hide();
+		$('.header-item').show();
+		$('.tambah_barang').show();
+		$('.footer-item').show();
+		$('.ppns').hide();
+		hidden_input();
+		show_lightbox();
+
+		$('#detail').append('<option value="" selected>Pilih Item</option>');
+		for(var z = 0; z < detailJSON.length; z++)	
+		{
+			$('#detail').append('<option value="'+detailJSON[z].id+'">' +detailJSON[z].item+ '</option>');
+		}
+
+		////////////////////////////////////////
+		// auto complete customer
+		//////////////////////////////////////
+
+		$.widget( "custom.catcomplete", $.ui.autocomplete, {
+			_create: function()
+			{
+				this._super();
+				this.widget().menu( "option", "items", "> :not(.ui-autocomplete-category)" );
+			},
+
+			_renderMenu: function( ul, items )
+			{
+				var that = this,
+				currentCategory = "";
+				$.each( items, function( index, item )
+				{
+					var li;
+					if ( item.category != currentCategory )
+					{
+						ul.append( "<li class='ui-autocomplete-category'>" + item.category + "</li>" );
+						currentCategory = item.category;
+					}
+					li = that._renderItemData( ul, item );
+					if ( item.category )
+					{
+						li.attr( "aria-label", item.category + " : " + item.label );
+					}
+				});
+			}
+		});
+
+		$('#customer').catcomplete({
+			minLength: 2,
+			source: function(request, response)
+			{
+				$.ajax({
+					url: pathFile+"/sales-order/suggest/customer?keyword="+request.term,
+					type: "GET",
+					beforeSend: function (xhr) {
+						xhr.setRequestHeader('Authorization', getCookie('access_token'));
+						xhr.setRequestHeader('Content-Type', 'application/json');
+					},
+					success: function(output)
+					{
+						AddItemData = [];
+						for(var i=0; i<output.response.data.length; i++) {
+							if(output.response.data[i].fkid > 0) {
+								AddItemData.push(output.response.data[i]);
+							}
+						}
+
+						response(AddItemData);
+					}
+				});
+			},
+			select: function(event, ui)
+			{
+				show_input();
+				$('#fkid').val(ui.item.fkid);
+				$('#poid').val(ui.item.po_id);
+			}
+		});
+			
+		$('#customer').keyup(function()
+		{
+			$("#id_customer").val('0');
+			$('#fkid').val('');
+			$('#item').val('');
+			$('#size').val('');
+			$('#merk').val('');
+			$('#type').val('');
+			$('#detail').val('');
+			$('#uk_bahan_baku').val('');
+			$('#qore').val('');
+			$('#lin').val('');
+			$('#qty_bahan_baku').val('');
+			$('#roll').val('');
+			$('#ingredient').val('');
+			$('#porporasi').val('');
+			$('#unit').val('');
+			$('#qty').val('');
+			$('#volume').val('');
+			$('#price').val('');
+			$('#annotation').val('');
+			$('.looping_barang').remove();
+			hidden_input();
+		});
+	});
+
+	///////////////////////////
+  	// 
+  	//////////////////////////
+
+  	$(document).on('submit', '#form_AddItemPO.add', function(e){
+    	e.preventDefault();
+    	hide_ipad_keyboard();
+      	hide_lightbox();
+      	show_loading_message();
+      	var formDataArray = $(this).serializeArray();
+		var formDataObject = {
+			items: []
+		};
+		
+		var arr = [];
+		var dataGroups = {};
+
+		formDataArray.forEach(function(item) {
+			if (item.name.startsWith("data[")) {
+				var matches = item.name.match(/data\[([^\]]+)\]\[(\d*)\]/);
+				if (matches) {
+					let count = arr.reduce(function(accumulator, currentValue) {
+						return currentValue === matches[1] ? accumulator + 1 : accumulator;
+					}, 0);
+
+					var fieldName = matches[1];
+					var index = count;
+	
+					if (!dataGroups[index]) {
+						dataGroups[index] = {};
+					}
+	
+					var value = (fieldName === 'qty' || fieldName === 'detail' || fieldName === 'porporasi' || fieldName === 'volume')? parseInt(item.value): item.value;
+					dataGroups[index][fieldName] = value;
+					arr.push(matches[1]);
+				}
+			} else {
+				var value = (item.name === 'fkid' || item.name === 'poid')? parseInt(item.value) : item.value; 
+				formDataObject[item.name] = value;
+			}
+		});
+
+		for (var key in dataGroups) {
+			formDataObject.items.push(dataGroups[key]);
+		}
+
+		var request   = $.ajax({
+			url:          pathFile+"/sales-order",
+			type:         'POST',
+			data:         JSON.stringify(formDataObject, null, 2),
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
+		});
+
+      	request.done(function(output){
+			if(output.status == "success"){
+	    		$("#sortby").empty();
+	      		tablenya.ajax.reload(function(){
+	        		hide_loading_message();
+	        		var Infos = $('#customer').val();
+	        		show_message("'"+Infos+"' create successfully.", 'success');
+	        		reset();
+	        		$('.looping_barang').remove();
+	      		}, true);
+
+				$.ajax({
+					url: pathFile+"/sortdata/archive?data=po_date&from=po_customer",
+					type: "GET",
+					beforeSend: function (xhr) {
+						xhr.setRequestHeader('Authorization', getCookie('access_token'));
+						xhr.setRequestHeader('Content-Type', 'application/json');
+					},
+					success: function(output){
+						if(output.status == "success"){
+							for(var i=0; i<output.response.data[0].year.length; i++) {
+								$("#sortby").append("<option value='"+output.response.data[0].year[i]+"' data-name='year' "+(getCookie("startdate") == output.response.data[0].year[i] ? 'selected' : '')+" >Tahun: "+output.response.data[0].year[i]+"</option>");
+							}
+							
+							for(var i = 0; i<output.response.data[0].month.length; i++){
+								$("#sortby").append("<option value='"+output.response.data[0].month[i]+"' data-name='month' "+(getCookie("startdate") == output.response.data[0].month[i] ? 'selected' : '')+" >Bulan: "+output.response.data[0].month[i]+"</option>");
+							}
+							setCookie("report", report, 1);
+							setCookie("startdate", startdate, 1);
+				
+						} else {
+							show_message('Failed: sort data fetching.', 'error');
+						}
+          			}
+				});
+
+	    	} else {
+	    		$('#company').empty();
+	    		$('#detail').empty();	
+	      		hide_loading_message();
+	      		show_message('Failed: '+output.response.message, 'error');
+	    	}
+	  	});
+	  	request.fail(function(jqXHR, textStatus){
+			$('#company').empty();
+			$('#detail').empty();
+			hide_loading_message();
+	    	show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
+	  	});
+  	});
+
+	///////////////////////////////////////////////////////
 	// Add PO button
   	//////////////////////////////////////////////////////
 
   	$(document).on('click', '#add_inputPO', function(e){
   		e.preventDefault();
+		$('#form_AddItemPO').attr('id', 'form_inputPO');
 		$('H2.FormTitle').text('INPUT '+FormsLug);
 		$(IDForm).attr('class', 'form add');
 		$(IDForm).attr('data-id', '');
@@ -773,6 +1005,10 @@ $(document).ready(function(){
 	  			show_input();
 	  			var customerid = ui.item.customerid;
 	  			var poid = ui.item.po_id;
+
+				if(!poid) {
+					poid = 0;
+				}
 
 	  			var meminta = $.ajax({
 					url: pathFile+"/sales-order/suggest/item?customerid="+customerid+"&poid="+poid,
@@ -874,7 +1110,7 @@ $(document).ready(function(){
   		}
 
   		$('#looping_barang').append(
-  			'<div class="looping_barang" id="looping-'+barisN+'"><hr class="looping-item"><p><button type="button" name="remove" idx="'+barisN+'" class="btn btn-danger btn_remove">Hapus</button></p><div class="form-group source-'+barisN+'"><label for="source">Sources: <span class="required">*</span></label><select class="form-control" name="data[sources][]" id="source" id_source="'+barisN+'" required><option selected disabled>Pilih sources</option><option value="1">Internal</option><option value="2">Subcont</option><option value="3">In Stock</option></select></div><div class="form-group etc1-class-'+barisN+'" style="display:none"><label for="Subcont-'+barisN+'">Subcont kepada: <span class="required">*</span></label><input type="text" class="form-control" name="data[etc1][]" id="etc1-input-'+barisN+'" required></div><div class="form-group etc2-class-'+barisN+'" style="display:none"><label for="Estimasi">Estimasi: <span class="required">*</span></label><input type="date" class="form-control" name="data[etc2][]" id="etc2-input" required></div><div class="form-group item-'+barisN+'"><label for="Item">Nama Barang: <span class="required">*</span></label><input type="text" class="form-control" name="data[item][]" id="item" required></div><div class="form-group detail-'+barisN+'"><label for="detail">Jenis Item: <span class="required">*</span></label><select class="form-control" name="data[detail][]" id="detail-'+barisN+'" required><option value="" selected>Pilih Item</option>'+options+'</select></div><div class="form-group merk-'+barisN+'" style="display:none"><label for="merk">Merk: <span class="required">*</span></label><input type="text" class="form-control" name="data[merk][]" id="merk" value="" required></div><div class="form-group type-'+barisN+'" style="display:none"><label for="type">Type: <span class="required">*</span></label><input type="text" class="form-control" name="data[type][]" id="type" value="" required></div><div class="form-group size-'+barisN+'" style="display:none"><label for="Size">Ukuran: <span class="required">*</span></label><input type="text" class="form-control" name="data[size][]" id="size" required></div><div class="form-group uk_bahan_baku-'+barisN+'" style="display:none"><label for="uk_bahan_baku">Uk. Bahan baku: <span class="required">*</span></label><input type="text" class="form-control" name="data[uk_bahan_baku][]" id="uk_bahan_baku" required></div><div class="form-group qore-'+barisN+'" style="display:none"><label for="Qore">Kor: <span class="required">*</span></label><input type="text" class="form-control" name="data[qore][]" id="qore" required></div><div class="form-group lin-'+barisN+'" style="display:none"><label for="lin">Line: <span class="required">*</span></label><input type="text" class="form-control" name="data[lin][]" id="lin" required></div><div class="form-group qty_bahan_baku-'+barisN+'" style="display:none"><label for="qty_bahan_baku">QTY Bahan baku: <span class="required">*</span></label><input type="text" class="form-control" name="data[qty_bahan_baku][]" id="qty_bahan_baku" required></div><div class="form-group roll-'+barisN+'" style="display:none"><label for="roll">Gulungan: <span class="required">*</span></label><select class="form-control" name="data[roll][]" id="roll" required><option disabled selected>Select roll</option><option value="FI">FI</option><option value="FO">FO</option><option value="LIPAT">LIPAT</option><option value="SHEET">SHEET</option></select></div><div class="form-group ingredient-'+barisN+'" style="display:none"><label for="ingredient">Bahan: </label><input type="text" class="form-control" name="data[ingredient][]" id="ingredient"></div><div class="form-group porporasi-'+barisN+'" style="display:none"><label for="porporasi">Porporasi: <span class="required">*</span></label><select class="form-control" id="porporasi" name="data[porporasi][]" required><option selected>Pilih Porporasi</option><option value="YA">YA</option><option value="TIDAK">TIDAK</option></select></div><div class="form-group unit-'+barisN+'" style="display:none"><label for="Unit">Satuan: <span class="required">*</span></label><select class="form-control" name="data[unit][]" id="unit" required><option disabled selected>Select satuan</option><option value="PCS">PCS</option><option value="ROLL">ROLL</option><option value="PAK">PAK</option><option value="METER">METER</option></select></div><div class="form-group qty-'+barisN+'"><label for="Qty">Qty: <span class="required">*</span></label><input type="number" value="" min="1" class="form-control" name="data[qty][]" id="qty-"'+barisN+' placeholder="0" required></div><div class="form-group volume-'+barisN+'" style="display:none"><label for="volume">Isi Roll/Pcs: <span class="required">*</span></label><input type="number" min="0" class="form-control" name="data[volume][]" id="volume" placeholder="1" required></div><div class="form-group price-'+barisN+'"><label for="Price">Harga: <span class="required">*</span></label><input type="text" value="" class="form-control" name="data[price][]" id="price-'+barisN+'" placeholder="0" required></div><div class="form-group annotation-'+barisN+'"><label for="Annotation">Catatan:</label><input type="text" class="form-control" name="data[annotation][]" id="annotation"></div><script>$(document).ready(function(){ $("#price-'+barisN+'").mask("0.000.000.000.000,00", {reverse: true});$("#qty-'+barisN+'").keyup(function(){ $("#ppns").val("0"); });$("#price-'+barisN+'").keyup(function(){ $("#ppns").val("0"); });$(document).on("change", "#detail-'+barisN+'", function(e){e.preventDefault();$(".merk-'+barisN+'").hide();$(".type-'+barisN+'").hide();$(".size-'+barisN+'").hide();$(".uk_bahan_baku-'+barisN+'").hide();$(".qore-'+barisN+'").hide();$(".lin-'+barisN+'").hide();$(".qty_bahan_baku-'+barisN+'").hide();$(".roll-'+barisN+'").hide();$(".ingredient-'+barisN+'").hide();$(".porporasi-'+barisN+'").hide();$(".unit-'+barisN+'").hide();$(".volume-'+barisN+'").hide();var id_'+barisN+' = $(this).val();if(id_'+barisN+'){$.ajax({url : "../auth/json.php",dataType: "JSON",type : "GET",contentType: "application/json; charset=utf-8",cache: false,data: {req: "so_attribute",id: id_'+barisN+'},success: function(output){var split_'+barisN+' = output[0].field.split(",");for(var loop_'+barisN+' = 0; loop_'+barisN+' < split_'+barisN+'.length; loop_'+barisN+'++){$("."+split_'+barisN+'[loop_'+barisN+']+"-'+barisN+'").show();}}});}});});</script></div>'
+  			'<div class="looping_barang" id="looping-'+barisN+'"><hr class="looping-item"><p><button type="button" name="remove" idx="'+barisN+'" class="btn btn-danger btn_remove">Hapus</button></p><div class="form-group source-'+barisN+'"><label for="source">Sources: <span class="required">*</span></label><select class="form-control" name="data[sources][]" id="source" id_source="'+barisN+'" required><option selected disabled>Pilih sources</option><option value="1">Internal</option><option value="2">Subcont</option><option value="3">In Stock</option></select></div><div class="form-group etc1-class-'+barisN+'" style="display:none"><label for="Subcont-'+barisN+'">Subcont kepada: <span class="required">*</span></label><input type="text" class="form-control" name="data[etc1][]" id="etc1-input-'+barisN+'" required></div><div class="form-group etc2-class-'+barisN+'" style="display:none"><label for="Estimasi">Estimasi: <span class="required">*</span></label><input type="date" class="form-control" name="data[etc2][]" id="etc2-input" required></div><div class="form-group item-'+barisN+'"><label for="Item">Nama Barang: <span class="required">*</span></label><input type="text" class="form-control" name="data[item][]" id="item" required></div><div class="form-group detail-'+barisN+'"><label for="detail">Jenis Item: <span class="required">*</span></label><select class="form-control" name="data[detail][]" id="detail-'+barisN+'" required><option value="" selected>Pilih Item</option>'+options+'</select></div><div class="form-group merk-'+barisN+'" style="display:none"><label for="merk">Merk: <span class="required">*</span></label><input type="text" class="form-control" name="data[merk][]" id="merk" value="" required></div><div class="form-group type-'+barisN+'" style="display:none"><label for="type">Type: <span class="required">*</span></label><input type="text" class="form-control" name="data[type][]" id="type" value="" required></div><div class="form-group size-'+barisN+'" style="display:none"><label for="Size">Ukuran: <span class="required">*</span></label><input type="text" class="form-control" name="data[size][]" id="size" required></div><div class="form-group uk_bahan_baku-'+barisN+'" style="display:none"><label for="uk_bahan_baku">Uk. Bahan baku: <span class="required">*</span></label><input type="text" class="form-control" name="data[uk_bahan_baku][]" id="uk_bahan_baku" required></div><div class="form-group qore-'+barisN+'" style="display:none"><label for="Qore">Kor: <span class="required">*</span></label><input type="text" class="form-control" name="data[qore][]" id="qore" required></div><div class="form-group lin-'+barisN+'" style="display:none"><label for="lin">Line: <span class="required">*</span></label><input type="text" class="form-control" name="data[lin][]" id="lin" required></div><div class="form-group qty_bahan_baku-'+barisN+'" style="display:none"><label for="qty_bahan_baku">QTY Bahan baku: <span class="required">*</span></label><input type="text" class="form-control" name="data[qty_bahan_baku][]" id="qty_bahan_baku" required></div><div class="form-group roll-'+barisN+'" style="display:none"><label for="roll">Gulungan: <span class="required">*</span></label><select class="form-control" name="data[roll][]" id="roll" required><option disabled selected>Select roll</option><option value="FI">FI</option><option value="FO">FO</option><option value="LIPAT">LIPAT</option><option value="SHEET">SHEET</option></select></div><div class="form-group ingredient-'+barisN+'" style="display:none"><label for="ingredient">Bahan: </label><input type="text" class="form-control" name="data[ingredient][]" id="ingredient"></div><div class="form-group porporasi-'+barisN+'" style="display:none"><label for="porporasi">Porporasi: <span class="required">*</span></label><select class="form-control" id="porporasi" name="data[porporasi][]" required><option selected>Pilih Porporasi</option><option value="YA">YA</option><option value="TIDAK">TIDAK</option></select></div><div class="form-group unit-'+barisN+'" style="display:none"><label for="Unit">Satuan: <span class="required">*</span></label><select class="form-control" name="data[unit][]" id="unit" required><option disabled selected>Select satuan</option><option value="PCS">PCS</option><option value="ROLL">ROLL</option><option value="PAK">PAK</option><option value="METER">METER</option></select></div><div class="form-group qty-'+barisN+'"><label for="Qty">Qty: <span class="required">*</span></label><input type="number" value="" min="1" class="form-control" name="data[qty][]" id="qty-"'+barisN+' placeholder="0" required></div><div class="form-group volume-'+barisN+'" style="display:none"><label for="volume">Isi Roll/Pcs: <span class="required">*</span></label><input type="number" min="0" class="form-control" name="data[volume][]" id="volume" placeholder="1" required></div><div class="form-group price-'+barisN+'"><label for="Price">Harga: <span class="required">*</span></label><input type="text" value="" class="form-control" name="data[price][]" id="price-'+barisN+'" placeholder="0" required></div><div class="form-group annotation-'+barisN+'"><label for="Annotation">Catatan:</label><input type="text" class="form-control" name="data[annotation][]" id="annotation"></div><script>$(document).ready(function(){ $("#price-'+barisN+'").mask("0.000.000.000.000,00", {reverse: true});$("#qty-'+barisN+'").keyup(function(){ $("#ppns").val("0"); });$("#price-'+barisN+'").keyup(function(){ $("#ppns").val("0"); });$(document).on("change", "#detail-'+barisN+'", function(e){e.preventDefault();$(".merk-'+barisN+'").hide();$(".type-'+barisN+'").hide();$(".size-'+barisN+'").hide();$(".uk_bahan_baku-'+barisN+'").hide();$(".qore-'+barisN+'").hide();$(".lin-'+barisN+'").hide();$(".qty_bahan_baku-'+barisN+'").hide();$(".roll-'+barisN+'").hide();$(".ingredient-'+barisN+'").hide();$(".porporasi-'+barisN+'").hide();$(".unit-'+barisN+'").hide();$(".volume-'+barisN+'").hide();var id_'+barisN+' = $(this).val();if(id_'+barisN+'){var pathFile = decodeURIComponent(getCookie("base_url_api")) +":"+ getCookie("base_port_api") + decodeURIComponent(getCookie("base_path_api")) + decodeURIComponent(getCookie("base_dashboard_api"));$.ajax({url: pathFile+"/sales-order/suggest/so?id="+id_'+barisN+',type:"GET",beforeSend: function (xhr){xhr.setRequestHeader("Authorization", getCookie("access_token"));xhr.setRequestHeader("Content-Type", "application/json");},success: function(output){var split_'+barisN+' = output.response.data.field.split(",");for(var loop_'+barisN+' = 0;loop_'+barisN+' < split_'+barisN+'.length; loop_'+barisN+'++){$("."+split_'+barisN+'[loop_'+barisN+']+"-'+barisN+'").show();}}});}});});</script></div>'
   			);
   		
   	});
@@ -954,8 +1190,6 @@ $(document).ready(function(){
 			formDataObject.items.push(dataGroups[key]);
 		}
 
-		
-		
 		var request   = $.ajax({
 			url:          pathFile+"/sales-order",
 			type:         'POST',
@@ -1117,6 +1351,10 @@ $(document).ready(function(){
 			  		{
 						var customerid = ui.item.customerid;
 						var poid = ui.item.po_id;
+
+						if(!poid) {
+							poid = 0;
+						}
 
 			  			var meminta = $.ajax({
 							url: pathFile+"/sales-order/suggest/item?customerid="+customerid+"&poid="+poid,

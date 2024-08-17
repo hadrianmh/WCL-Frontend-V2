@@ -5,12 +5,10 @@ $(document).ready(function(){
 	/////////////////////////
 
 	var idTablenya = $('#tablenya');
-	var pathFile = '../auth/delivery_orders_delivery.php';
+	var pathFile = decodeURIComponent(getCookie('base_url_api')) +':'+ getCookie('base_port_api') + decodeURIComponent(getCookie('base_path_api')) + decodeURIComponent(getCookie('base_dashboard_api'));
 	var Act = 'action';
 	var sLug = 'delivery_orders_delivery';
-	var FormsLug = 'SURAT JALAN';
 	var IDForm = "#form_inputSJ";
-	var addButton = "#add_inputSJ";
 	var sukses = 'success'; //Message alert
 
 	/////////////////////////////////////////////////////////////////
@@ -19,7 +17,8 @@ $(document).ready(function(){
 
 	var mm = ("0" + (new Date().getMonth() + 1)).slice(-2);
 	var yyyy = new Date().getFullYear();
-	var arsip = yyyy+"/"+mm;
+	var startdate = yyyy+"/"+mm;
+	var report = 'month';
 
 	function setCookie(cname, cvalue, exdays) {
 	    var d = new Date();
@@ -48,33 +47,47 @@ $(document).ready(function(){
 	/////////////////////////////////////////////////////////////////
 
 	var req = $.ajax({
-		url: pathFile+"?"+Act+"=sortdata_"+sLug,
-		cache: false,
-		dataType: 'json',
-		contentType: 'application/json; charset=utf-8',
-		type: 'get'
-	});
-
-	req.done(function(output){
-		if(output.result == sukses){
-			for(var i = 0; i<output.data.length; i++){
-				$("#sortby").append("<option value='"+output.data[i].montly+"' "+(getCookie("selectMonth") == output.data[i].montly ? 'selected' : '')+" >"+output.data[i].montly+"</option>");
-			}
-			setCookie("selectMonth", arsip, 1);
-
-		} else {
-	        show_message('Gagal memuat data', 'error');
+		url: pathFile+"/sortdata/archive?data=sj_date&from=delivery_orders_customer",
+		type: "GET",
+		beforeSend: function (xhr) {
+			xhr.setRequestHeader('Authorization', getCookie('access_token'));
+			xhr.setRequestHeader('Content-Type', 'application/json');
 		}
 	});
 
+	req.done(function(output){
+		if(output.status == "success"){
+			for(var i=0; i<output.response.data[0].year.length; i++) {
+				$("#sortby").append("<option value='"+output.response.data[0].year[i]+"' data-name='year' "+(getCookie("startdate") == output.response.data[0].year[i] ? 'selected' : '')+" >Tahun: "+output.response.data[0].year[i]+"</option>");
+			}
+			
+			for(var i = 0; i<output.response.data[0].month.length; i++){
+				$("#sortby").append("<option value='"+output.response.data[0].month[i]+"' data-name='month' "+(getCookie("startdate") == output.response.data[0].month[i] ? 'selected' : '')+" >Bulan: "+output.response.data[0].month[i]+"</option>");
+			}
+			setCookie("report", report, 1);
+			setCookie("startdate", startdate, 1);
+
+		} else {
+	        show_message('Failed: sort data fetching.', 'error');
+		}
+	});
+
+	req.fail(function(jqXHR, textStatus){
+		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
+	});
+
 	$(document).on('change', '#sortby', function(){
-		var valMonth = $(this).find(":selected").val();
-		setCookie("selectMonth", valMonth, 1);
+		report = $(this).attr('name');
+		startdate = $(this).find(":selected").val();
+		setCookie("report", report, 1);
+		setCookie("startdate", startdate, 1);
 	});
 
 	$(document).on('click', '#LoadData', function(){
-		var valMonth = $('#sortby').find(":selected").val();
-		setCookie("selectMonth", valMonth, 1);
+		report = $('#sortby').find(":selected").attr('data-name');
+		startdate = $('#sortby').find(":selected").val();
+		setCookie("report", report, 1);
+		setCookie("startdate", startdate, 1);
 		location.reload();
 	});
 
@@ -83,18 +96,66 @@ $(document).ready(function(){
 	///////////////////////////
 
 	var tablenya = idTablenya.DataTable({
+		initComplete : function() {
+			var input = $('.dataTables_filter input').unbind(),
+			self = this.api(),
+			$searchButton = $(`<button class="btn btn-default"><i class="fa fa-search"></i></button>`).click(function(){ self.search(input.val()).draw(); });
+			$resetButton = $(`<button class="btn btn-default"><i class="fa fa-times"></i></button>`).click(function() { input.val('');$searchButton.click(); }); 
+			$('.dataTables_filter').append($searchButton, $resetButton);
+		},
+		"serverSide" : true,
 		"scrollX": true,
-	    "ajax": pathFile+"?"+Act+"=result_"+sLug+"&curMonth="+getCookie("selectMonth"),
+		"ajax": {
+			"url" : pathFile+"/delivery-order",
+			"type": "GET",
+			"data": {
+				report : getCookie("report"),
+				startdate: getCookie("startdate"),
+				enddate: getCookie("enddate")
+			},
+			"dataFilter": function(data) {
+				var obj = JSON.parse(data);
+				obj.data = obj.response.datatables;
+				obj.recordsTotal = obj.response.recordsTotal;
+				obj.recordsFiltered = obj.response.recordsFiltered;
+				return JSON.stringify( obj );
+			},
+			"dataSrc": function (json) {
+				if(json.code == 200) {
+					return json.response.datatables;
+				} else {
+					console.error('Error fetching data:', json);
+					return [];
+				}
+            },
+			"beforeSend": function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			},
+			"error": function (xhr, error, thrown) {
+				console.error('Error fetching data:', xhr, error, thrown);
+				alert('Terjadi kesalahan, silahkan login kembali.');
+				// window.location.href = '/auth/signout.php';
+			}
+		},
 	    'columnDefs': [
 	    	{
-	    		'targets': [0,1,2,3,4,5,7,8,9,10,11,12,13,14],
+	    		'targets': [0,1,2,3,4,6,7,8,9,10,11,12,13],
 	            'className': 'dt-nowrap'
-	        }
+	        },
+			{
+				"targets": 13,
+				"data": null,
+				"defaultContent": "",
+				"render": function (data, type, row) {
+					//return '<button class="btn btn-default function_edit" data-id="'+ data.id +'"><i class="fa fa-pencil"></i></button>';
+					return '<button class="btn btn-default function_print" data-id="'+ data.id +'" title="Print"><i class="fa fa-print"></i></button> <button class="btn btn-default function_delete" data-id="'+ data.id +'" data-name="'+data.item+'" title="Delete"><i class="fa fa-trash"></i></button>';
+				}
+			}
 	    ],
 	    "columns": [
-	      { "data": "no" },
 	      { "data": "sj_date"},
-	      { "data": "no_delivery"},
+	      { "data": "no_sj"},
 	      { "data": "customer"},
 	      { "data": "po_customer"},
 	      { "data": "no_spk"},
@@ -103,10 +164,9 @@ $(document).ready(function(){
 	      { "data": "send_qty"},
 	      { "data": "unit"},
 	      { "data": "courier"},
-	      { "data": "no_tracking"},
-	      { "data": "ongkir"},
-	      { "data": "input_by"},
-	      { "data": "functions","sClass": "functions" }
+	      { "data": "resi"},
+	      { "data": "cost"},
+	      { "data": "username"},
 	    ],
 	    "lengthMenu": [[10, -1], [10, "All"]],
 	    iDisplayLength: 10,
@@ -138,43 +198,18 @@ $(document).ready(function(){
 	    }
 	});
 
-	var tablePrint = $("#tablePrint").DataTable({
-		"scrollX": false,
-		"bPaginate": false,
-		"searching": false,
-		"info": false,
-	    "ajax": pathFile+"?"+Act+"=resultAll_"+sLug+"&curMonth="+getCookie("selectMonth"),
-	    "columns": [
-	      { "data": "no" },
-	      { "data": "sj_date"},
-	      { "data": "no_delivery"},
-	      { "data": "customer"},
-	      { "data": "po_customer"},
-	      { "data": "no_spk"},
-	      { "data": "shipto"},
-	      { "data": "item"},
-	      { "data": "send_qty"},
-	      { "data": "unit"},
-	      { "data": "courier"},
-	      { "data": "no_tracking"},
-	      { "data": "ongkir"},
-	      { "data": "input_by"},
-	    ],
-	    iDisplayLength: -1,
-	});
-
-	var buttons = new $.fn.dataTable.Buttons(tablePrint, {
-		buttons:[
-        {
-        	extend: 'excelHtml5',
-        	messageTop: false,
-        	footer: true,
-        	text: 'Export to Excel',
-        	filename : 'DO-Delivery_'+getCookie("selectMonth"),
-        	title: 'Delivery Order Delivery '+getCookie("selectMonth"),
-        }
-		]
-	}).container().appendTo($('.dt-buttons'));
+	// var buttons = new $.fn.dataTable.Buttons(tablenya, {
+	// 	buttons:[
+    //     {
+    //     	extend: 'excelHtml5',
+    //     	messageTop: false,
+    //     	footer: true,
+    //     	text: 'Export to Excel',
+    //     	filename : 'DO-Delivery_'+getCookie("report"),
+    //     	title: 'Delivery Order Delivery '+getCookie("report"),
+    //     }
+	// 	]
+	// }).container().appendTo($('.dt-buttons'));
 
 	///////////////////////////////
 	// On page load: form validation
@@ -279,34 +314,39 @@ $(document).ready(function(){
     	hide_ipad_keyboard();
       	periode_hide();
       	show_loading_message();
-      	var form_data = $(FormPeriode).serialize();
-      	var request   = $.ajax({
-        	url:          pathFile+"?"+Act+"=periode_"+sLug,
-        	cache:        false,
-        	data:         form_data,
-        	method: 	  'GET',
-        	dataType: 'json'
-      	});
+		report = $("#report").val();
+		startdate = $("#startdate").val();
+		enddate = $("#enddate").val();
+      	var request = $.ajax({
+	    	url:          pathFile+"/delivery-order",
+			type:         'GET',
+			data: {
+				report : getCookie("report"),
+				startdate: getCookie("startdate"),
+				enddate: getCookie("enddate")
+			},
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
+	    });
 
       	request.done(function(output){
-	    	if (output.result == sukses){
-	    		tablenya.ajax.url(pathFile+"?"+Act+"=periode_"+sLug+"&"+form_data).load();
-      			tablePrint.ajax.url(pathFile+"?"+Act+"=periode_"+sLug+"&"+form_data).load();
-      			tablenya.draw();
-      			tablePrint.draw();
-        		hide_loading_message();
-        		show_message("Berhasil memuat dimasukan.", 'success');
-        		periode_reset();
+	    	if(output.status == "success"){
+        		setCookie("report", report, 1);
+				setCookie("startdate", startdate, 1);
+				setCookie("enddate", enddate, 1);
+        		location.reload();
 
 	    	} else {
 	      		hide_loading_message();
-	      		show_message(output.message, 'error');
+	      		show_message('Failed: '+output.response.message, 'error');
 	    	}
 	  	});
 
 	  	request.fail(function(jqXHR, textStatus){
 	    	hide_loading_message();
-	    	show_message('Gagal memuat data: '+textStatus, 'error');
+	    	show_message('Failed: '+output.response.message, 'error');
 	  	});
   	});
 
@@ -314,49 +354,48 @@ $(document).ready(function(){
   	// Print view button
 	////////////////////////////////////////
 
-	$(document).on('click', '.function_print a', function(e){
+	$(document).on('click', '.function_print', function(e){
 		e.preventDefault();
 	    show_loading_message();
 	    var id      = $(this).data('id');
-	    var ex 		= id.split('-');
 	    var request = $.ajax({
-	    	url:          pathFile+"?"+Act+"=get_print_"+sLug,
-	      	cache:        false,
-	      	data:         'id='+ex[0]+'&id_fk='+ex[1]+'&id_sj='+ex[2],
-	      	dataType:     'json',
-	      	contentType:  'application/json; charset=utf-8',
-	      	type:         'get'
+	    	url:          pathFile+"/delivery-order/printview/"+id,
+			type:         'GET',
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
 	    });
 	    request.done(function(output){
-	    	if (output.result == sukses){
+	    	if(output.status == "success"){
 	    		$('#myModal2').show();
 	    		$('h2.FormTitle').text('PRATINJAU PRINT');
 	        	$('#form_print .field_container label.error').hide();
 	        	$('#form_print').attr('data-id', id);
 	        	$('#form_print').attr('class', 'form printProses');
-	        	$('#sj_date').val(output.data[0].sj_date);
-	        	$('#no_po_pratinjau').val(output.data[0].po_customer);
-	        	$('#no_delivery').val(output.data[0].no_delivery);
-	        	$('#custom').val(output.data[0].customer);
-	        	$('#shipto').val(output.data[0].shipto);
-				$('#telp').val(output.data[0].telp);
+	        	$('#sj_date').val(output.response.data[0].sj_date);
+	        	$('#no_po_pratinjau').val(output.response.data[0].po_customer);
+	        	$('#no_delivery').val(output.response.data[0].no_sj);
+	        	$('#custom').val(output.response.data[0].customer);
+	        	$('#shipto').val(output.response.data[0].shipto);
+				$('#telp').val(output.response.data[0].telp);
 	        	var no = 0;
-	        	for(var i = 0; i<output.data.length; i++){
+	        	for(var i = 0; i<output.response.data.length; i++){
 	        		no++;
 	        		$('.itemnya').append(
-	        			'<div class="looping-item"><div class="form-group"><label for="item">Nama Barang '+no+' : <span class="required">*</span></label><input type="text" class="form-control" name="data[item][]" id="item" value="'+output.data[i].item+'" required readonly></div><div class="form-group"><label for="qty">Qty: <span class="required">*</span></label><input type="text" class="form-control" name="data[qty][]" id="qty" value="'+output.data[i].qty+' '+output.data[i].unit+'" required readonly></div>'
+	        			'<div class="looping-item"><div class="form-group"><label for="item">Nama Barang '+no+' : <span class="required">*</span></label><input type="text" class="form-control" name="data[item][]" id="item" value="'+output.response.data[i].item+'" required readonly></div><div class="form-group"><label for="qty">Qty: <span class="required">*</span></label><input type="text" class="form-control" name="data[qty][]" id="qty" value="'+output.response.data[i].qty+' '+output.response.data[i].unit+'" required readonly></div>'
 	        			);
 	        	}
 
 	        	hide_loading_message();
 	      	} else {
 	        	hide_loading_message();
-	        	show_message('Gagal mengambil data', 'error');
+	        	show_message('Failed: '+output.response.message, 'error');
 	      	}
 	    });
 	    request.fail(function(jqXHR, textStatus){
 	    	hide_loading_message();
-	      	show_message('Gagal mengambil data: '+textStatus, 'error');
+			show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	    });
 	});
 
@@ -370,22 +409,21 @@ $(document).ready(function(){
 	      	hide_ipad_keyboard();
 	      	hide_lightbox();
 	      	show_loading_message();
-	      	var id        = $('#form_print').attr('data-id');
-      		var ex 		= id.split('-');
-	      	var form_data 	= $('#form_print').serialize();
+	      	var id = $('#form_print').attr('data-id');
 	      	$.ajax({
-	        	url: 	pathFile+"?"+Act+"=print&id="+ex[0]+"&id_fk="+ex[1]+"&id_sj="+ex[2],
-	        	cache:  false,
-	        	data:   form_data,
-	        	type: 'POST',
-	        	success: function(respon){
-	        		var obj = JSON.parse(respon);
-	        		if(obj.result == 'success'){
+	        	url:	pathFile+"/delivery-order/printnow/"+id,
+				type:	'GET',
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				},
+	        	success: function(output){
+	        		if(output.status == "success"){
 	        			hide_loading_message();
 	        			$('#PrintModal').show();
-	        			if(!!obj.data[0].logo){
+	        			if(!!output.response.data[0].logo){
 	        				$('.delivery-orders-title').append(
-	        					'<div class="col-md-2 col-xs-2"><img src="'+obj.data[0].logo+'" width="100px" height="50px" style="margin-top: 20px"></div><div class="col-md-10 col-xs-10"><h4 class="company" style="letter-spacing:2px;margin-bottom: 0px"><strong></strong></h4><p class="address" style="letter-spacing:2px;margin-bottom: 0px"></p><p class="telp" style="letter-spacing:2px;margin-bottom: 0px"></p></div>'
+	        					'<div class="col-md-2 col-xs-2"><img src="'+output.response.data[0].logo+'" width="100px" height="50px" style="margin-top: 20px"></div><div class="col-md-10 col-xs-10"><h4 class="company" style="letter-spacing:2px;margin-bottom: 0px"><strong></strong></h4><p class="address" style="letter-spacing:2px;margin-bottom: 0px"></p><p class="telp" style="letter-spacing:2px;margin-bottom: 0px"></p></div>'
 	        				);
 
 	        			} else {
@@ -393,21 +431,22 @@ $(document).ready(function(){
 	        					'<div class="col-md-12 col-xs-12"><h4 class="company" style="letter-spacing:2px;margin-bottom: 0px"><strong></strong></h4><p class="address" style="letter-spacing:2px;margin-bottom: 0px"></p><p class="telp" style="letter-spacing:2px;margin-bottom: 0px"></p></div>'
 	        				);
 	        			}
-	        			$('.company strong').text(obj.data[0].company);
-	        			$('.address').text(obj.data[0].address);
-	        			$('.telp').text('Telp : '+obj.data[0].phone);
-	        			$('.bill').text(obj.data[0].customer);
-	        			$('.tgl').text(obj.data[0].sj_date);
-	        			$('.ship').text(obj.data[0].shipto);
-	        			$('.nosj').text(obj.data[0].no_delivery);
-	        			for(var i = 0; i<obj.data.length; i++){
+	        			$('.company strong').text(output.response.data[0].company);
+	        			$('.address').text(output.response.data[0].address);
+	        			$('.telp').text('Telp : '+output.response.data[0].phone);
+	        			$('.bill').text(output.response.data[0].customer);
+	        			$('.tgl').text(output.response.data[0].sj_date);
+	        			$('.ship').text(output.response.data[0].shipto);
+	        			$('.nosj').text(output.response.data[0].no_sj);
+	        			for(var i = 0; i<output.response.data.length; i++){
+							no = i + 1;
 		        			$('.tbody').parent().append(
-		        				'<tr><td class="text-center">'+obj.data[i].no+'</td><td class="text-center">'+obj.data[i].no_so+'</td><td class="text-center">'+obj.data[i].po_customer+'</td><td>'+obj.data[i].item+'</td><td class="text-center">'+obj.data[i].qty+'</td><td class="text-center">'+obj.data[i].unit+'</td></tr>'
+		        				'<tr><td class="text-center">'+no+'</td><td class="text-center">'+output.response.data[i].no_so+'</td><td class="text-center">'+output.response.data[i].po_customer+'</td><td>'+output.response.data[i].item+'</td><td class="text-center">'+output.response.data[i].qty+'</td><td class="text-center">'+output.response.data[i].unit+'</td></tr>'
 		        			);
 		        		}
 	        			
-	        			$('.ttd').append('<strong>Name : </strong>'+obj.data[0].ttd);
-	        			$('.ttd_date').append('<strong>Date : </strong>'+obj.data[0].sj_date);
+	        			$('.ttd').append('<strong>Name : </strong>'+output.response.data[0].ttd);
+	        			$('.ttd_date').append('<strong>Date : </strong>'+output.response.data[0].sj_date);
 
 		        		$('.printnow').print({
 		                    stylesheet : "../lib/css/bootstrap/bootstrap.min.css",
@@ -421,11 +460,11 @@ $(document).ready(function(){
 
 	        		} else {
 	        			hide_loading_message();
-	      				show_message('Print gagal.', 'error');
+						show_message('Failed: '+output.response.message, 'error');
 	        		}
 	        	},
 		        error: function(jqXHR, textStatus, errorThrown){
-		            show_message('Print gagal: '+textStatus, 'error');
+					show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 		        }
 	      	});
 	    }
@@ -435,37 +474,37 @@ $(document).ready(function(){
   	// Delete button
   	//////////////////
 
-  	$(document).on('click', '.customerDel a', function(e){
+  	$(document).on('click', '.function_delete', function(e){
 	    e.preventDefault();
 	    var Infos = $(this).data('name');
 	    if(confirm("Anda yakin ingin menghapus '"+Infos+"'?")){
 	    	show_loading_message();
 	      	var id      = $(this).data('id');
-	      	var ex		= id.split('-');
 	      	var request = $.ajax({
-	        	url:          pathFile+"?"+Act+"=del_"+sLug+"&id="+ex[0]+"&id_fk="+ex[1]+"&item_to="+ex[2]+"&id_sj="+ex[3],
-	        	cache:        false,
-	        	dataType:     'json',
-	        	contentType:  'application/json; charset=utf-8',
-	        	type:         'get'
+	        	url:	pathFile+"/delivery-order/"+id,
+				type:	'DELETE',
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				},
 	      	});
 	      	
 	      	request.done(function(output){
-	        	if (output.result == sukses){
+	        	if(output.status == "success"){
 	          		tablenya.ajax.reload(function(){
-	          			tablePrint.ajax.reload();
 	            		hide_loading_message();
-	            		show_message("'"+Infos+"' berhasil dihapus.", 'success');
+	            		show_message("'"+Infos+"' deleted successfully.", 'success');
+						setCookie("report", 'year', 1);
 	          		}, true);
 	        	} else {
 	          		hide_loading_message();
-	          		show_message('Gagal menghapus', 'error');
+	          		show_message('Failed: '+output.response.message, 'error');
 	       		}
 	      	});
 	      	
 	      	request.fail(function(jqXHR, textStatus){
 	        	hide_loading_message();
-	        	show_message('Gagal menghapus: '+textStatus, 'error');
+	        	show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	      	});
 	    }
   	});
