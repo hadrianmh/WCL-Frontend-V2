@@ -1422,7 +1422,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group ongkos_kirim">
                   <label for="ongkos_kirim">Biaya Kirim: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="ongkos_kirim" id="ongkos_kirim" required>
+                  <input type="text" class="form-control" name="cost" id="ongkos_kirim" required>
                 </div>
 
                 <div class="form-group ekspedisi">
@@ -1434,6 +1434,18 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                   <label for="sel1">Unit: <span class="required">*</span></label></label>
                   <select class="form-control" name="uom" id="uom" required>
                     <option value="" selected>Pilih satuan</option>
+                    <option value="PCS">PCS</option>
+                    <option value="ROLL">ROLL</option>
+                    <option value="PAK">PACK</option>
+                    <option value="CM">CM</option>
+                    <option value="MM">MM</option>
+                    <option value="METER">METER</option>
+                    <option value="DUSH">DUSH</option>
+                    <option value="BOTOL">BOTOL</option>
+                    <option value="UNIT">UNIT</option>
+                    <option value="ONS">ONS</option>
+                    <option value="KG">KG</option>
+                    <option value="LITER">LITER</option>
                   </select>
                 </div>
 

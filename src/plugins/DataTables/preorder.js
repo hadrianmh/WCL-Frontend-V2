@@ -615,8 +615,8 @@ $(document).ready(function(){
 	      	hide_ipad_keyboard();
 	      	ongkirbox_close();
 	      	show_loading_message();
-			var id			= $('##form_inputOngkir').attr('data-id');
-			var form_data 	= $('##form_inputOngkir').serializeArray();
+			var id			= $('#surat_jalan').val();
+			var form_data 	= $('#form_inputOngkir').serializeArray();
 			
 			var jsonData = {};
 			$.each(form_data, function(){

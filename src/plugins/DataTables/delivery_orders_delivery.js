@@ -198,18 +198,18 @@ $(document).ready(function(){
 	    }
 	});
 
-	// var buttons = new $.fn.dataTable.Buttons(tablenya, {
-	// 	buttons:[
-    //     {
-    //     	extend: 'excelHtml5',
-    //     	messageTop: false,
-    //     	footer: true,
-    //     	text: 'Export to Excel',
-    //     	filename : 'DO-Delivery_'+getCookie("report"),
-    //     	title: 'Delivery Order Delivery '+getCookie("report"),
-    //     }
-	// 	]
-	// }).container().appendTo($('.dt-buttons'));
+	var buttons = new $.fn.dataTable.Buttons(tablenya, {
+		buttons:[
+        {
+        	extend: 'excelHtml5',
+        	messageTop: false,
+        	footer: true,
+        	text: 'Export to Excel',
+        	filename : 'DO-Delivery_'+getCookie("report"),
+        	title: 'Delivery Order Delivery '+getCookie("report"),
+        }
+		]
+	}).container().appendTo($('.dt-buttons'));
 
 	///////////////////////////////
 	// On page load: form validation

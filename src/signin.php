@@ -1,3 +1,29 @@
+<?php
+// LOAD CONFIG
+$configfile = 'config.json';
+if (file_exists($configfile)) {
+  $getconfig = file_get_contents($configfile);
+  $ENV = json_decode($getconfig, TRUE);
+  if($ENV !== null && $ENV['base_url_api'] !== null && $ENV['base_path_api'] !== null && $ENV["base_port_api"] !== null && $ENV["base_url"] !== null && $ENV["base_port"] !== null && $ENV["base_path"] !== null){
+    // Define env to set cookie
+		setcookie('base_url', $ENV["base_url"], time() + (10 * 365 * 24 * 60 * 60), "/");
+		setcookie('base_path', $ENV["base_path"], time() + (10 * 365 * 24 * 60 * 60), "/");
+		setcookie('base_port', $ENV["base_port"], time() + (10 * 365 * 24 * 60 * 60), "/");
+		setcookie('base_url_api', $ENV["base_url_api"], time() + (10 * 365 * 24 * 60 * 60), "/");
+		setcookie('base_path_api', $ENV["base_path_api"], time() + (10 * 365 * 24 * 60 * 60), "/");
+		setcookie('base_port_api', $ENV["base_port_api"], time() + (10 * 365 * 24 * 60 * 60), "/");
+		setcookie('base_dashboard_api', $ENV["base_dashboard_api"], time() + (10 * 365 * 24 * 60 * 60), "/");
+
+  } else {
+    echo "Config is not configured well.";
+    exit();
+  }
+} else {
+  echo "Config file not found.";
+  exit();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
