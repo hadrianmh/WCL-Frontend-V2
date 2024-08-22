@@ -147,12 +147,14 @@ $(document).ready(function(){
 		initComplete : function() {
 			var input = $('.dataTables_filter input').unbind(),
 			self = this.api(),
-			$searchButton = $(`<button class="btn btn-default"><i class="fa fa-search"></i></button>`).click(function(){ self.search(input.val()).draw(); });
-			$resetButton = $(`<button class="btn btn-default"><i class="fa fa-times"></i></button>`).click(function() { input.val('');$searchButton.click(); }); 
+			$searchButton = $(`<a class="btn btn-default"><i class="fa fa-search"></i></a>`).click(function(){ self.search(input.val()).draw(); });
+			$resetButton = $(`<a class="btn btn-default"><i class="fa fa-times"></i></a>`).click(function() { input.val('');$searchButton.click(); }); 
 			$('.dataTables_filter').append($searchButton, $resetButton);
 		},
 		"serverSide" : true,
 		"scrollX": true,
+		'scrollCollapse': true,
+		'scrollY': '600px',
 	    "ajax": {
 			"url" : pathFile+"/sales-order",
 			"type": "GET",
@@ -183,7 +185,7 @@ $(document).ready(function(){
 			"error": function (xhr, error, thrown) {
 				console.error('Error fetching data:', xhr, error, thrown);
 				alert('Terjadi kesalahan, silahkan login kembali.');
-				window.location.href = '/auth/signout.php';
+				// window.location.href = '/auth/signout.php';
 			}
 		},
 	    'columnDefs': [
@@ -841,8 +843,21 @@ $(document).ready(function(){
 					if (!dataGroups[index]) {
 						dataGroups[index] = {};
 					}
+
+					if (fieldName === 'price'){
+						if(item.value.includes(',')) {
+							value = item.value.replace('.', '').replace(',','.');
+						} else {
+							value = item.value;
+						}
+						
+					} else if(fieldName === 'qty' || fieldName === 'detail' || fieldName === 'porporasi' || fieldName === 'volume') {
+						value = parseInt(item.value);
+					
+					} else {
+						value = item.value;
+					}
 	
-					var value = (fieldName === 'qty' || fieldName === 'detail' || fieldName === 'porporasi' || fieldName === 'volume')? parseInt(item.value): item.value;
 					dataGroups[index][fieldName] = value;
 					arr.push(matches[1]);
 				}
@@ -1175,8 +1190,21 @@ $(document).ready(function(){
 					if (!dataGroups[index]) {
 						dataGroups[index] = {};
 					}
-	
-					var value = (fieldName === 'qty' || fieldName === 'detail' || fieldName === 'porporasi' || fieldName === 'volume')? parseInt(item.value): item.value;
+
+					if (fieldName === 'price'){
+						if(item.value.includes(',')) {
+							value = item.value.replace('.', '').replace(',','.');
+						} else {
+							value = item.value;
+						}
+
+					} else if(fieldName === 'qty' || fieldName === 'detail' || fieldName === 'porporasi' || fieldName === 'volume') {
+						value = parseInt(item.value);
+					
+					} else {
+						value = item.value;
+					}
+
 					dataGroups[index][fieldName] = value;
 					arr.push(matches[1]);
 				}

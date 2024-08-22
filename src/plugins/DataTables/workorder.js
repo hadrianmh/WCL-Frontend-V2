@@ -101,12 +101,14 @@ $(document).ready(function(){
 		initComplete : function() {
 			var input = $('.dataTables_filter input').unbind(),
 			self = this.api(),
-			$searchButton = $(`<button class="btn btn-default"><i class="fa fa-search"></i></button>`).click(function(){ self.search(input.val()).draw(); });
-			$resetButton = $(`<button class="btn btn-default"><i class="fa fa-times"></i></button>`).click(function() { input.val('');$searchButton.click(); }); 
+			$searchButton = $(`<a class="btn btn-default"><i class="fa fa-search"></i></a>`).click(function(){ self.search(input.val()).draw(); });
+			$resetButton = $(`<a class="btn btn-default"><i class="fa fa-times"></i></a>`).click(function() { input.val('');$searchButton.click(); }); 
 			$('.dataTables_filter').append($searchButton, $resetButton);
 		},
 		"serverSide" : true,
 		"scrollX": true,
+		'scrollCollapse': true,
+		'scrollY': '600px',
 	    "ajax": {
 			"url" : pathFile+"/workorder",
 			"type": "GET",

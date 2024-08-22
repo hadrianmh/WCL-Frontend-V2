@@ -6,10 +6,7 @@ $(document).ready(function(){
 
 	var idTablenya = $('#tablenya');
 	var pathFile = decodeURIComponent(getCookie('base_url_api')) +':'+ getCookie('base_port_api') + decodeURIComponent(getCookie('base_path_api')) + decodeURIComponent(getCookie('base_dashboard_api'));
-	var Act = 'action';
-	var sLug = 'delivery_orders_delivery';
 	var IDForm = "#form_inputSJ";
-	var sukses = 'success'; //Message alert
 
 	/////////////////////////////////////////////////////////////////
 	// Set cookie as 'SelectMonth'
@@ -99,12 +96,14 @@ $(document).ready(function(){
 		initComplete : function() {
 			var input = $('.dataTables_filter input').unbind(),
 			self = this.api(),
-			$searchButton = $(`<button class="btn btn-default"><i class="fa fa-search"></i></button>`).click(function(){ self.search(input.val()).draw(); });
-			$resetButton = $(`<button class="btn btn-default"><i class="fa fa-times"></i></button>`).click(function() { input.val('');$searchButton.click(); }); 
+			$searchButton = $(`<a class="btn btn-default"><i class="fa fa-search"></i></a>`).click(function(){ self.search(input.val()).draw(); });
+			$resetButton = $(`<a class="btn btn-default"><i class="fa fa-times"></i></a>`).click(function() { input.val('');$searchButton.click(); }); 
 			$('.dataTables_filter').append($searchButton, $resetButton);
 		},
 		"serverSide" : true,
 		"scrollX": true,
+		'scrollCollapse': true,
+		'scrollY': '600px',
 		"ajax": {
 			"url" : pathFile+"/delivery-order",
 			"type": "GET",
@@ -135,7 +134,7 @@ $(document).ready(function(){
 			"error": function (xhr, error, thrown) {
 				console.error('Error fetching data:', xhr, error, thrown);
 				alert('Terjadi kesalahan, silahkan login kembali.');
-				// window.location.href = '/auth/signout.php';
+				window.location.href = '/auth/signout.php';
 			}
 		},
 	    'columnDefs': [

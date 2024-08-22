@@ -83,7 +83,7 @@
 <script type="text/javascript" src="../plugins/DataTables/invoice_waiting.js"></script>
 <script type="text/javascript" src="../plugins/jQuery.print/jQuery.print.js"></script>
 <link href="../plugins/DataTables/buttons.dataTables.min.css" rel="stylesheet" type="text/css">
- <script type="text/javascript" src="../plugins/DataTables/dataTables.checkboxes.min.js"></script>
+<script type="text/javascript" src="../plugins/DataTables/dataTables.checkboxes.min.js"></script>
 <!-- DataTables properties -->
 <?php } elseif(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "invoice_procces"){ ?>
 <!-- DataTables properties -->

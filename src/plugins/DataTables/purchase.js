@@ -150,12 +150,14 @@ $(document).ready(function(){
 		initComplete : function() {
 			var input = $('.dataTables_filter input').unbind(),
 			self = this.api(),
-			$searchButton = $(`<button class="btn btn-default"><i class="fa fa-search"></i></button>`).click(function(){ self.search(input.val()).draw(); });
-			$resetButton = $(`<button class="btn btn-default"><i class="fa fa-times"></i></button>`).click(function() { input.val('');$searchButton.click(); }); 
+			$searchButton = $(`<a class="btn btn-default"><i class="fa fa-search"></i></a>`).click(function(){ self.search(input.val()).draw(); });
+			$resetButton = $(`<a class="btn btn-default"><i class="fa fa-times"></i></a>`).click(function() { input.val('');$searchButton.click(); }); 
 			$('.dataTables_filter').append($searchButton, $resetButton);
 		},
 		"serverSide" : true,
 		"scrollX": true,
+		'scrollCollapse': true,
+		'scrollY': '600px',
 	    "ajax": {
 			"url" : pathFile+"/purchase-order",
 			"type": "GET",
@@ -357,6 +359,8 @@ $(document).ready(function(){
 		$('#unit').val('');
 		$('#note').val('');
 		$('#ppns').val('0');
+		$('#company').val('');
+		$('#po_type').val('');
 		$('.po_type').val('');
 		$('#looping_barang').empty();
 		$('.logo_surat').empty();
@@ -700,6 +704,20 @@ $(document).ready(function(){
 							dataGroups[index] = {};
 						}
 		
+						if (fieldName === 'price_1' || fieldName === 'price_2'){
+							if(item.value.includes(',')) {
+								value = item.value.replace('.', '').replace(',','.');
+							} else {
+								value = item.value;
+							}
+							
+						} else if(fieldName === 'qty') {
+							value = parseInt(item.value);
+						
+						} else {
+							value = item.value;
+						}
+						
 						var value = (fieldName === 'qty')? parseInt(item.value): item.value;
 						dataGroups[index][fieldName] = value;
 						arr.push(matches[1]);
@@ -756,8 +774,6 @@ $(document).ready(function(){
 		$(IDForm).attr('data-id', '');
 		$('.ppns').show();
 		$('.tambah_barang').hide();
-		$('#company').empty();
-	    $('#po_type').empty();
 		show_lightbox();
 
 		$('#company').append('<option selected disabled>Pilih Entitas</option>');
@@ -971,7 +987,20 @@ $(document).ready(function(){
 						dataGroups[index] = {};
 					}
 	
-					var value = (fieldName === 'qty')? parseInt(item.value): item.value;
+					if (fieldName === 'price_1' || fieldName === 'price_2'){
+						if(item.value.includes(',')) {
+							value = item.value.replace('.', '').replace(',','.');
+						} else {
+							value = item.value;
+						}
+						
+					} else if(fieldName === 'qty') {
+						value = parseInt(item.value);
+					
+					} else {
+						value = item.value;
+					}
+
 					dataGroups[index][fieldName] = value;
 					arr.push(matches[1]);
 				}
@@ -1002,8 +1031,6 @@ $(document).ready(function(){
 	        		hide_loading_message();
 					var Infos = $('#vendor').val();
 	        		show_message("'"+Infos+"' berhasil dimasukan.", 'success');
-	        		$('#company').empty();
-	        		$('#po_type').empty();
 	        		reset();
 	        		clean();
 	      		}, true);
@@ -1034,19 +1061,19 @@ $(document).ready(function(){
 				});
 
 	    	} else {
-	    		$('#company').empty();
-	    		$('#po_type').empty();
-	    		$('.po_type').empty();
 	      		hide_loading_message();
 	      		show_message('Failed: '+output.response.message, 'error');
+				$('#company').val('');
+				$('#po_type').val('');
+				$('.po_type').val('');
 	    	}
 	  	});
 	  	request.fail(function(jqXHR, textStatus){
-	  		$('#company').empty();
-	  		$('#po_type').empty();
-	  		$('.po_type').empty();
 	    	hide_loading_message();
 	    	show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
+			$('#company').val('');
+			$('#po_type').val('');
+			$('.po_type').val('');
 	  	});
   	});
 
@@ -1652,10 +1679,16 @@ $(document).ready(function(){
 					xhr.setRequestHeader('Content-Type', 'application/json');
 				},
 				success: function(output){
+					price_2 = false;
+					$('.po_type').val(id);
 					po_type_attribute = output.response.data.field;
 					split_po_type_attribute = output.response.data.field.split(',');
-					for(var x = 0; x < split_po_type_attribute.length; x++)
+					for(var x = 0; x < split_po_type_attribute.length; x++) {
 						$('.'+split_po_type_attribute[x]).show();
+						if(split_po_type_attribute[x] === 'price_2') {
+							document.getElementById("price_2").disabled = false;
+						}
+					}
 				}
 	    	});
     	}

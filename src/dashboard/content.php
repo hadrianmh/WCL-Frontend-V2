@@ -1979,7 +1979,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
             <thead>
               <tr>
                   <th></th>
-                  <th>No</th>
                   <th>Tgl Surat Jalan</th>
                   <th>Customer</th>
                   <th>No PO</th>
@@ -2007,7 +2006,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                   <th></th>
                   <th></th>
                   <th></th>
-                  <th></th>
                   <th class="text-right" style="font-weight: bold">Total Amount:</th>
                   <th></th>
                   <th></th>
@@ -2018,45 +2016,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
             </tfoot>
           </table>
           </form>
-
-          <table id="tablePrint" class="datatable nowrap" style="display: none">
-            <thead>
-              <tr>
-                  <th>No</th>
-                  <th>Tgl Surat Jalan</th>
-                  <th>Customer</th>
-                  <th>No PO</th>
-                  <th>No SO</th>
-                  <th>Surat Jalan</th>
-                  <th>Qty</th>
-                  <th>Unit</th>
-                  <th>Harga</th>
-                  <th>Tagihan</th>
-                  <th>Ppn</th>
-                  <th>Total</th>
-                  <th>Biaya Kirim</th>
-              </tr>
-            </thead>
-            <tbody>
-            </tbody>
-            <tfoot>
-              <tr>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th class="text-right" style="font-weight: bold">Total Amount:</th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-              </tr>
-            </tfoot>
-          </table>
 
           <!-- Modal Invoice -->
           <div id="InvoiceModal" class="modal">
@@ -2134,7 +2093,6 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
           <table id="tablenya" class="datatable" style="width:100%">
             <thead>
               <tr>
-                  <th>No</th>
                   <th>Diterbitkan</th>
                   <th>Jatuh Tempo</th>
                   <th>Customer</th>
@@ -2170,62 +2128,8 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
                   <th></th>
                   <th></th>
                   <th></th>
-                  <th></th>
                   <th class="text-right" style="font-weight: bold">Total Amount:</th>
                   <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-              </tr>
-            </tfoot>
-          </table>
-
-          <table id="tablePrint" class="datatable nowrap" style="display: none">
-            <thead>
-              <tr>
-                  <th>No</th>
-                  <th>Diterbitkan</th>
-                  <th>Jatuh Tempo</th>
-                  <th>Customer</th>
-                  <th>No PO</th>
-                  <th>No SO</th>
-                  <th>Surat Jalan</th>
-                  <th>No Faktur</th>
-                  <th>Qty</th>
-                  <th>Unit</th>
-                  <th>Harga</th>
-                  <th>Tagihan</th>
-                  <th>Ppn</th>
-                  <th>Total</th>
-                  <th>Biaya Kirim</th>
-                  <th>Ekspedisi</th>
-                  <th>Uom</th>
-                  <th>Jumlah</th>
-                  <th>Dicetak</th>
-                  <th>Diinput</th>
-              </tr>
-            </thead>
-            <tbody>
-            </tbody>
-            <tfoot>
-              <tr>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th></th>
-                  <th class="text-right" style="font-weight: bold">Total Amount:</th>
                   <th></th>
                   <th></th>
                   <th></th>
@@ -2333,23 +2237,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group pilihBANK">
                   <label>Bank: <span class="required">*</span></label>
-                  <select class="form-control" id="pilihBANK" name="pilihBANK" required>
-                    <?php
-                    $query = "SELECT id,isi FROM setting WHERE ket = 'BANK'";
-                    $sql = $connect->query($query);
-                    if($sql->num_rows < 1){ ?>
-
-                    <option value="" disabled selected>Pilih Bank :</option>
-
-                    <?php } else { ?>
-
-                    <option value="" disabled selected>Pilih Bank :</option>
-                      <?php while($row = $sql->fetch_array()){
-                        $ex = explode('-', $row['isi']); ?>
-                        <option value="<?php echo $row['isi']; ?>"><?php echo $ex[0]; ?> - <?php echo $ex[1]; ?> - <?php echo $ex[2]; ?></option>   
-                      <?php }
-                    } ?>
-                    </select>
+                  <select class="form-control" id="pilihBANK" name="pilihBANK" required></select>
                 </div>
                 
                 <hr class="baris">
@@ -2491,17 +2379,18 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group">
                   <label>Dari Tanggal: <span class="required">*</span></label>
-                  <input type="date" class="form-control" name="dari" id="dari" required>
+                  <input type="date" class="form-control" name="startdate" id="startdate" required>
                 </div>
 
                 <div class="form-group">
                   <label>Sampai: <span class="required">*</span></label>
-                  <input type="date" class="form-control" name="sampai" id="sampai" required>
+                  <input type="date" class="form-control" name="enddate" id="enddate" required>
                 </div>
         
                 <div class="button_container" style="text-align: center">
                   <button type="submit" class="lihat">View</button>
                   <input type="button" class="periode_close" value="Cancel">
+                  <input type="hidden" id="report" value="periode">
                 </div>
               </form>
             </div>

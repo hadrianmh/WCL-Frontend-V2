@@ -5,58 +5,111 @@ $(document).ready(function(){
 	/////////////////////////
 
 	var idTablenya = $('#tablenya');
-	var pathFile = '../auth/invoice_waiting.php';
-	var Act = 'action';
-	var sLug = 'invoice_waiting';
+	var pathFile = decodeURIComponent(getCookie('base_url_api')) +':'+ getCookie('base_port_api') + decodeURIComponent(getCookie('base_path_api')) + decodeURIComponent(getCookie('base_dashboard_api'));
 	var IDForm = "#form_print";
-
-	//Message alert
-	var sukses = 'success';
 
 	///////////////////////////
 	// On page load: datatable
 	///////////////////////////
 
-	var tablenya = idTablenya.DataTable({  
+	let arr = {};
+	var tablenya = idTablenya.DataTable({
+		initComplete : function() {
+			var input = $('.dataTables_filter input').unbind(),
+			self = this.api(),
+			$searchButton = $(`<a class="btn btn-default"><i class="fa fa-search"></i></a>`).click(function(){ self.search(input.val()).draw(); });
+			$resetButton = $(`<a class="btn btn-default"><i class="fa fa-times"></i></a>`).click(function() { input.val('');$searchButton.click(); }); 
+			$('.dataTables_filter').append($searchButton, $resetButton);
+		},
+		"serverSide": true,
 		'scrollX': true,
 		'bPaginate': false,
-	    "ajax": pathFile+"?"+Act+"=result_"+sLug,
+		'scrollCollapse': true,
+		'scrollY': '600px',
+	    "ajax": {
+			"url" : pathFile+"/invoice",
+			"type": "GET",
+			"dataFilter": function(data) {
+				var obj = JSON.parse(data);
+				obj.data = obj.response.data;
+				obj.recordsTotal = obj.response.recordsTotal;
+				obj.recordsFiltered = obj.response.recordsFiltered;
+				return JSON.stringify( obj );
+			},
+			"dataSrc": function (json) {
+				if(json.code == 200) {
+					return json.response.data;
+				} else {
+					console.error('Error fetching data:', json);
+					return [];
+				}
+            },
+			"beforeSend": function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			},
+			"error": function (xhr, error, thrown) {
+				console.error('Error fetching data:', xhr, error, thrown);
+				alert('Terjadi kesalahan, silahkan login kembali.');
+				window.location.href = '/auth/signout.php';
+			}
+		},
 	    'columnDefs': [
 	    	{
 	    		'targets': 0,
 	            'checkboxes': {
 	               'selectRow': true
 	            }
-
+					
 	        },
-	        {
-	        	'targets': [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+			{
+	    		'targets': [0,1,2,3,4,6,8,9,10,11,12,13],
 	            'className': 'dt-nowrap'
-	        }
+	        },
+			{
+                "targets": [8,9,10,11,12],
+                "render": function(data, type, row) {		
+                    return new Intl.NumberFormat('id-ID', {
+                        style: 'currency',
+                        currency: 'IDR',
+                        minimumFractionDigits: 2
+                    }).format(parseFloat(data));
+                }
+            }
 	    ],
 	    'select': {
          	'style': 'multi'
       	},
 	    "columns": [
-	      { "data": "id" },
-	      { "data": "no" },
-	      { "data": "sj_date" },
-	      { "data": "customer"},
-	      { "data": "no_po" },
-	      { "data": "no_so" },
-	      { "data": "no_sj"},
-	      { "data": "send_qty"},
-	      { "data": "unit"},
-	      { "data": "price"},
-	      { "data": "bill"},
-	      { "data": "ppn"},
-	      { "data": "total"},
-	      { "data": "shipping_costs"},
-	      { "data": "functions","sClass": "functions" }
+			{ "data": "id" },
+			{ "data": "sj_date" },
+			{ "data": "customer"},
+			{ "data": "po_customer" },
+			{ "data": "no_so" },
+			{ "data": "no_sj"},
+			{ "data": "send_qty"},
+			{ "data": "unit"},
+			{ "data": "price"},
+			{ "data": "bill"},
+			{ "data": "ppn"},
+			{ "data": "total"},
+			{ "data": "cost"},
+			{
+				"data": "id",
+				"render": function(data, type, row, meta) {
+					if(arr[data]) {
+						return "";
+					} else {
+						arr[data] = true;
+						return '<button class="btn btn-default function_process" data-id="'+ row.id +'" data-name="'+ row.no_sj +'" title="Create Invoice"><i class="fa fa-share"></i></button>';
+					}
+
+				}
+			},
 	    ],
 	    "lengthMenu": [[-1], ["All"]],
 	    iDisplayLength: -1,
-	    dom: 'Bfrtp',
+		dom: 'Bfrtp',
 	    buttons: [ 
 	    'pageLength',
 	    { 
@@ -72,62 +125,7 @@ $(document).ready(function(){
                         i : 0;
             };
             
-            Bills = api.column( 10, { page: 'current'} ).data().reduce( function (a, b) {
-            	return intVal(a) + intVal(b);
-            }, 0 );
-
-            Ppns = api.column( 11, { page: 'current'} ).data().reduce( function (a, b) {
-            	return intVal(a) + intVal(b);
-            }, 0 );
-
-            Totals = Bills + Ppns;
-            
-            Ship_cost = api.column( 13, { page: 'current'} ).data().reduce( function (a, b) {
-            	return intVal(a) + intVal(b);
-            }, 0 );
-
-            $( api.column( 10 ).footer() ).html(Rupiah(Bills));
-            $( api.column( 11 ).footer() ).html(Rupiah(Ppns));
-            $( api.column( 12 ).footer() ).html(Rupiah(Totals));
-            $( api.column( 13 ).footer() ).html(Rupiah(Ship_cost));
-        }
-	});
-
-	//////////////////////////////////////////////////////////////
-	// Create function print all with hidden table
-	/////////////////////////////////////////////////////////////
-
-	var tablePrint = $("#tablePrint").DataTable({
-		"scrollX": true,
-		"bPaginate": false,
-		"searching": false,
-		"info": false,
-	    "ajax": pathFile+"?"+Act+"=resultAll_"+sLug,
-	    "columns": [
-	    { "data": "no" },
-	      { "data": "sj_date" },
-	      { "data": "customer"},
-	      { "data": "no_po" },
-	      { "data": "no_so" },
-	      { "data": "no_sj"},
-	      { "data": "send_qty"},
-	      { "data": "unit"},
-	      { "data": "price"},
-	      { "data": "bill"},
-	      { "data": "ppn"},
-	      { "data": "total"},
-	      { "data": "shipping_costs"},
-	    ],
-	    "footerCallback": function ( row, data, start, end, display ) {
-        	var api = this.api(), data;
-            var intVal = function ( i ) {
-                return typeof i === 'string' ?
-                    i.replace(/[\$,]/g, '')*1 :
-                    typeof i === 'number' ?
-                        i : 0;
-            };
-            
-           	Bills = api.column( 9, { page: 'current'} ).data().reduce( function (a, b) {
+            Bills = api.column( 9, { page: 'current'} ).data().reduce( function (a, b) {
             	return intVal(a) + intVal(b);
             }, 0 );
 
@@ -148,7 +146,7 @@ $(document).ready(function(){
         }
 	});
 
-	var buttons = new $.fn.dataTable.Buttons(tablePrint, {
+	var buttons = new $.fn.dataTable.Buttons(tablenya, {
 		buttons:[
         {
         	extend: 'excelHtml5',
@@ -242,7 +240,7 @@ $(document).ready(function(){
   	// Single invoice
 	////////////////////////////////////////
 
-  	$(document).on('click', '.function_process a', function(e){
+  	$(document).on('click', '.function_process', function(e){
 	    e.preventDefault();
 	    var id = $(this).data('id');
 	    var name = $(this).data('name');
@@ -257,37 +255,38 @@ $(document).ready(function(){
 	    e.preventDefault();
 	    hide_invoice();
 	    show_loading_message();
-	    var id      = $(this).data('id');
-      	var ex 		= id.split('-');
-      	var date 	= $('#date').val();
+		var jsonData = {};
+	    var id       = $(this).data('id');
+	    var date     = $('#date').val();
+
+		jsonData.id = id;
+		jsonData.invoice_date = date;
+
       	var request = $.ajax({
-        	url:          pathFile+"?"+Act+"=create_"+sLug,
-        	data : {
-        		id: ex[0],
-        		id_sj : ex[1],
-        		date: date,
-        	},
-        	cache:        false,
-        	type:         'POST'
-      	});
+	    	url:          pathFile+"/invoice",
+			type:         'POST',
+			data:         JSON.stringify(jsonData),
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
+	    });
       	
       	request.done(function(output){
-      		var obj = JSON.parse(output);
-        	if (obj.result == sukses){
+			if(output.status == "success"){
           		tablenya.ajax.reload(function(){
-          			tablePrint.ajax.reload();
             		hide_loading_message();
-            		show_message("Berhasil diproses.", 'success');
+            		show_message("Create successfully.", 'success');
           		}, true);
         	} else {
           		hide_loading_message();
-          		show_message('Gagal memproses', 'error');
+          		show_message('Failed: '+output.response.message, 'error');
        		}
       	});
       	
       	request.fail(function(jqXHR, textStatus){
         	hide_loading_message();
-        	show_message('Gagal memproses: '+textStatus, 'error');
+        	show_message('Failed: '+textStatus, 'error');
       	});
 	});
 
@@ -324,35 +323,39 @@ $(document).ready(function(){
 	    e.preventDefault();
 	    hide_invoice();
 	    show_loading_message();
-	    var id      = $(this).data('id');
-      	var date 	= $('#date').val();
+		var jsonData = {};
+
+		var id       = $(this).data('id');
+	    var date     = $('#date').val();
+
+		jsonData.id = id;
+		jsonData.invoice_date = date;
+
       	var request = $.ajax({
-        	url:          pathFile+"?"+Act+"=create_custom_"+sLug,
-        	data : {
-        		id: id,
-        		date: date,
-        	},
-        	cache:        false,
-        	type:         'POST'
-      	});
-      	
+	    	url:          pathFile+"/invoice",
+			type:         'POST',
+			data:         JSON.stringify(jsonData),
+			beforeSend: function (xhr) {
+				xhr.setRequestHeader('Authorization', getCookie('access_token'));
+				xhr.setRequestHeader('Content-Type', 'application/json');
+			}
+	    });
+
       	request.done(function(output){
-      		var obj = JSON.parse(output);
-        	if (obj.result == sukses){
+      		if(output.status == "success"){
           		tablenya.ajax.reload(function(){
-          			tablePrint.ajax.reload();
             		hide_loading_message();
-            		show_message("Berhasil diproses.", 'success');
+            		show_message("Create successfully.", 'success');
           		}, true);
         	} else {
           		hide_loading_message();
-          		show_message('Gagal memproses', 'error');
+          		show_message('Failed: '+output.response.message, 'error');
        		}
       	});
       	
       	request.fail(function(jqXHR, textStatus){
         	hide_loading_message();
-        	show_message('Gagal memproses: '+textStatus, 'error');
+        	show_message('Failed: '+textStatus, 'error');
       	});
 	});
 });
