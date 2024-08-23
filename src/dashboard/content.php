@@ -4844,8 +4844,8 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
               <h4>Bank</h4>
             </div>
 
-            <?php 
-
+            <?php
+            require '../utils/connectV1.php';
             $query = "SELECT isi FROM setting WHERE ket = 'BANK'";
             $sql = $connect->query($query);
             if($sql->num_rows < 1){ ?>

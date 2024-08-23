@@ -1,7 +1,27 @@
 <?php
-require 'auth/connect.php';
-$query = "SELECT role FROM user WHERE role='1' LIMIT 1";
-$sql = $connect->query($query);
+// LOAD CONFIG
+$configfile = 'config.json';
+if (file_exists($configfile)) {
+  $getconfig = file_get_contents($configfile);
+  $ENV = json_decode($getconfig, TRUE);
+  if($ENV !== null && $ENV['base_url_api'] !== null && $ENV['base_path_api'] !== null && $ENV["base_port_api"] !== null && $ENV["base_url"] !== null && $ENV["base_port"] !== null && $ENV["base_path"] !== null){
+    // Define env to set cookie
+		setcookie('base_url', $ENV["base_url"], time() + (10 * 365 * 24 * 60 * 60), "/");
+		setcookie('base_path', $ENV["base_path"], time() + (10 * 365 * 24 * 60 * 60), "/");
+		setcookie('base_port', $ENV["base_port"], time() + (10 * 365 * 24 * 60 * 60), "/");
+		setcookie('base_url_api', $ENV["base_url_api"], time() + (10 * 365 * 24 * 60 * 60), "/");
+		setcookie('base_path_api', $ENV["base_path_api"], time() + (10 * 365 * 24 * 60 * 60), "/");
+		setcookie('base_port_api', $ENV["base_port_api"], time() + (10 * 365 * 24 * 60 * 60), "/");
+		setcookie('base_dashboard_api', $ENV["base_dashboard_api"], time() + (10 * 365 * 24 * 60 * 60), "/");
+
+  } else {
+    echo "Config is not configured well.";
+    exit();
+  }
+} else {
+  echo "Config file not found.";
+  exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -25,7 +45,7 @@ $sql = $connect->query($query);
         $('#signup').click(function(){
           if($('.form-daftar').valid() == true){
             $('#loader').show();
-            var nama = $('#nama').val();
+            var name = $('#nama').val();
             var email = $('#email').val();
             var pass = $('#password').val();
             var role = $('#role').val();
@@ -33,12 +53,28 @@ $sql = $connect->query($query);
             $.ajax({
               type : 'POST',
               url : 'auth/registration.php',
-              data : 'nama='+nama+'&email='+email+'&password='+pass+'&role='+role+'&code='+code,
+              data : {
+                name: name,
+                email: email,
+                password: pass,
+                role: role,
+                code: code
+              },
               cache: false,
-              success : function(respone){
+              success : function(output){
                 $('#loader').hide();
                 $('.responeMsg').show();
-                $('.responeMsg').html(respone);
+                var obj = JSON.parse(output);
+                if(obj.code == 200) {
+                  $('#nama').val('');
+                  $('#email').val('');
+                  $('#password').val('');
+                  $('#role').val('');
+                  $('#captcha_code').val('');
+                  $('.responeMsg').html("<div class='alert alert-success'>"+obj.status+"</div>");
+                } else {
+                  $('.responeMsg').html("<div class='alert alert-danger'>"+obj.response.message+"</div>");
+                }
               }
             });
           }

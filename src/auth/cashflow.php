@@ -3,8 +3,7 @@
 /////////////////////////////
 // Personal config DataTables 
 ////////////////////////////
-require '../dashboard/session.php';
-require 'connect.php';
+require '../utils/connectV1.php';
 $tabel1 = 'cash_flow_data';
 $tabel2 = 'cash_flow_money';
 $Query = 'action';

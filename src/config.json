@@ -5,5 +5,9 @@
     "base_url_api": "http://host.docker.internal",
     "base_path_api": "/api/v1",
     "base_port_api": "8082",
-    "base_dashboard_api": "/dashboard"
+    "base_dashboard_api": "/dashboard",
+    "database_host": "host.docker.internal",
+    "database_user": "root",
+    "database_pass": "root",
+    "database_name": "apps_v3"
 }   

@@ -3,8 +3,7 @@
 /////////////////////////////
 // Personal config DataTables 
 ////////////////////////////
-require '../dashboard/session.php';
-require 'connect.php';
+require '../utils/connectV1.php';
 $tabel1 = 'tol_data';
 $tabel2 = 'tol_money';
 $Query = 'action';
@@ -114,8 +113,8 @@ if($action != ''){
 
 	} elseif ($action == 'masuk_'.$slug){
 
-    $uang = str_replace('.', '', mysqli_real_escape_string($connect, $_GET['uang']));
-    $tgl = mysqli_real_escape_string($connect, $_GET['tgl']);
+    $uang = str_replace('.', '', $_GET['uang']);
+    $tgl = $_GET['tgl'];
     $originalDate = $tgl;
     $newDate = date("Y/m", strtotime($originalDate));
     $select = "SELECT * FROM $tabel1 WHERE id_fk = '".$newDate."' ORDER BY id DESC LIMIT 1";
@@ -127,7 +126,7 @@ if($action != ''){
 
       $query1 = "INSERT INTO $tabel1 SET ";
       $query1 .= "id_fk = '".$newDate."', tgl = '".$tgl."', masuk = '".$uang."', keluar = '0', sisa = '".$sisa."',";
-      if (isset($_GET['keterangan'])){ $query1 .= "keterangan  = '".mysqli_real_escape_string($connect, $_GET['keterangan'])."'";}
+      if (isset($_GET['keterangan'])){ $query1 .= "keterangan  = '".$_GET['keterangan']."'";}
 
       $query2 = "UPDATE $tabel2 SET saldo = saldo + ".$uang." WHERE id_fk = '".$newDate."'";
 
@@ -145,7 +144,7 @@ if($action != ''){
 
       $query1 = "INSERT INTO $tabel1 SET ";
       $query1 .= "id_fk = '".$newDate."', tgl = '".$tgl."', masuk = '".$uang."', keluar = '0', sisa = '".$uang."',";
-      if (isset($_GET['keterangan'])){ $query1 .= "keterangan= '".mysqli_real_escape_string($connect, $_GET['keterangan'])."'";}
+      if (isset($_GET['keterangan'])){ $query1 .= "keterangan= '".$_GET['keterangan']."'";}
       
       $query2 = "INSERT INTO $tabel2 SET id_fk = '".$newDate."', saldo = '".$uang."'";
       
