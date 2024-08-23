@@ -139,10 +139,10 @@ $(document).ready(function(){
             	return intVal(a) + intVal(b);
             }, 0 );
 
-            $( api.column( 9 ).footer() ).html(Rupiah(Bills));
-            $( api.column( 10 ).footer() ).html(Rupiah(Ppns));
-            $( api.column( 11 ).footer() ).html(Rupiah(Totals));
-            $( api.column( 12 ).footer() ).html(Rupiah(Ship_cost));
+            $( api.column( 9 ).footer() ).html(convertToconvertToRupiah(Bills));
+            $( api.column( 10 ).footer() ).html(convertToconvertToRupiah(Ppns));
+            $( api.column( 11 ).footer() ).html(convertToconvertToRupiah(Totals));
+            $( api.column( 12 ).footer() ).html(convertToconvertToRupiah(Ship_cost));
         }
 	});
 
@@ -199,10 +199,13 @@ $(document).ready(function(){
 		$('#myModal').hide();
 	}
 
-	function Rupiah(angka){
-		var checked = angka.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-		var filter = 'Rp. ' + checked.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-		return filter;
+	function convertToconvertToRupiah(angka){
+		let formatted = new Intl.NumberFormat('id-ID', {
+			style: 'currency',
+			currency: 'IDR',
+			minimumFractionDigits: 2
+		}).format(angka);
+		return formatted;
 	}
 
 	// Lightbox close button
@@ -345,7 +348,7 @@ $(document).ready(function(){
       		if(output.status == "success"){
           		tablenya.ajax.reload(function(){
             		hide_loading_message();
-            		show_message("Create successfully.", 'success');
+            		show_message("Successfully.", 'success');
           		}, true);
         	} else {
           		hide_loading_message();

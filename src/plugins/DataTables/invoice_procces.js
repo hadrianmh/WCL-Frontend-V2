@@ -6,12 +6,7 @@ $(document).ready(function(){
 
 	var idTablenya = $('#tablenya');
 	var pathFile = decodeURIComponent(getCookie('base_url_api')) +':'+ getCookie('base_port_api') + decodeURIComponent(getCookie('base_path_api')) + decodeURIComponent(getCookie('base_dashboard_api'));
-	var Act = 'action';
-	var sLug = 'invoice_procces';
 	var IDForm = "#form_print";
-
-	//Message alert
-	var sukses = 'success';
 
 	function getCookie(cname) {
 	    var name = cname + "=";
@@ -86,7 +81,6 @@ $(document).ready(function(){
 		},
 		"serverSide": true,
 		'scrollX': true,
-		'bPaginate': false,
 		'scrollCollapse': true,
 		'scrollY': '600px',
 	    "ajax": {
@@ -96,7 +90,6 @@ $(document).ready(function(){
 				report: getCookie("report"),
 				startdate: getCookie("startdate"),
 				enddate: getCookie("enddate"),
-
 			},
 			"type": "GET",
 			"dataFilter": function(data) {
@@ -122,7 +115,7 @@ $(document).ready(function(){
 			"error": function (xhr, error, thrown) {
 				console.error('Error fetching data:', xhr, error, thrown);
 				alert('Terjadi kesalahan, silahkan login kembali.');
-				// window.location.href = '/auth/signout.php';
+				window.location.href = '/auth/signout.php';
 			}
 		},
 	    'columnDefs': [
@@ -146,7 +139,7 @@ $(document).ready(function(){
 				"defaultContent": "",
 				"render": function (data, type, row) {
 					//return '<button class="btn btn-default function_edit" data-id="'+ data.id +'"><i class="fa fa-pencil"></i></button>';
-					return '<button class="btn btn-default function_print" data-id="'+ data.invoiceid +'" title="Print"><i class="fa fa-print"></i></button> <button class="btn btn-default function_complete" data-id="'+ data.invoiceid +'" title="Completed"><i class="fa fa-check"></i></button> <button class="btn btn-default function_delete" data-id="'+ data.invoiceid +'" data-name="'+data.no_invoice+'" title="Delete"><i class="fa fa-trash"></i></button>';
+					return '<button class="btn btn-default function_print" data-id="'+ data.invoiceid +'" title="Print"><i class="fa fa-print"></i></button> <button class="btn btn-default function_complete" data-id="'+ data.invoiceid +'" data-name="'+data.no_invoice+'" title="Paid"><i class="fa fa-check"></i></button> <button class="btn btn-default function_delete" data-id="'+ data.invoiceid +'" data-name="'+data.no_invoice+'" title="Delete"><i class="fa fa-trash"></i></button>';
 				}
 			}
 	    ],
@@ -171,8 +164,8 @@ $(document).ready(function(){
 	      { "data": "print_by"},
 	      { "data": "input_by"}
 	    ],
-	    "lengthMenu": [[-1], ["All"]],
-	    iDisplayLength: -1,
+	    "lengthMenu": [[10, 100, 1000, -1], [10, 100, 1000, "All"]],
+	    iDisplayLength: 10,
 	    dom: 'Bfrtp',
 	    buttons: [ 
 	    	'pageLength',
@@ -210,10 +203,10 @@ $(document).ready(function(){
             	return intVal(a) + intVal(b);
             }, 0 );
 
-            $( api.column( 10 ).footer() ).html(Rupiah(Bills));
-            $( api.column( 11 ).footer() ).html(Rupiah(Ppns));
-            $( api.column( 12 ).footer() ).html(Rupiah(Totals));
-            $( api.column( 13 ).footer() ).html(Rupiah(Ship_cost));
+            $( api.column( 10 ).footer() ).html(convertToconvertToRupiah(Bills));
+            $( api.column( 11 ).footer() ).html(convertToconvertToRupiah(Ppns));
+            $( api.column( 12 ).footer() ).html(convertToconvertToRupiah(Totals));
+            $( api.column( 13 ).footer() ).html(convertToconvertToRupiah(Ship_cost));
         }
 	});
 
@@ -271,10 +264,13 @@ $(document).ready(function(){
 		$('#PrintModal').hide();
 	}
 
-	function Rupiah(angka){
-		var checked = angka.toString().split('.').join(',');
-		var filter = 'Rp. ' + checked.replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1.");
-		return filter;
+	function convertToconvertToRupiah(angka){
+		let formatted = new Intl.NumberFormat('id-ID', {
+			style: 'currency',
+			currency: 'IDR',
+			minimumFractionDigits: 2
+		}).format(angka);
+		return formatted;
 	}
 
 	// Lightbox close button
@@ -367,8 +363,8 @@ $(document).ready(function(){
 	        	$('#company').val(output.response.data[0].company);
 	        	$('#address').val(output.response.data[0].address);
 	        	$('#phone').val(output.response.data[0].phone);
-	        	$('#tagihan').val(Rupiah(output.response.data[0].total));
-	        	$('#s_cost').val(Rupiah(output.response.data[0].cost));
+	        	$('#tagihan').val(convertToRupiah(output.response.data[0].total));
+	        	$('#s_cost').val(convertToRupiah(output.response.data[0].cost));
 	        	$('#bill').val(output.response.data[0].tagihan);
 	        	$('#biaya_kirim').val(output.response.data[0].cost);
 	        	$('#customer').val(output.response.data[0].customer);
@@ -390,11 +386,6 @@ $(document).ready(function(){
 
 				const totalppn = arrppn.reduce((partialSum, a) => partialSum + a, 0);
 				$('#status_ppn').val(totalppn.toFixed(2));
-
-				console.log(arrppn);
-				console.log(totalppn.toFixed(2));
-
-
 
 	        	hide_loading_message();
 	        	show_lightbox();
@@ -509,20 +500,20 @@ $(document).ready(function(){
 		        			$('.ship_alamat').text(output.response.data[0].shipto);
 		        			$('.invoice_date').text(output.response.data[0].invoice_date);
 		        			$('.po_customer').text(output.response.data[0].po_customer);
-		        			$('.payment_due').text(output.response.data[0].tenggat);
+		        			$('.payment_due').text(output.response.data[0].duration);
 		        			$('.rekening').text(output.response.data[0].rek);
 		        			$('.atasnama').text(output.response.data[0].an);
 		        			$('.namabank').text(output.response.data[0].bank);
-		        			$('.subtotal').text(Rupiah(output.response.data[0].subtotal));
-		        			$('.jumlah').text(Rupiah(output.response.data[0].total));
-		        			$('.vat').text(Rupiah(output.response.data[0].ppn));
+		        			$('.subtotal').text(convertToRupiah(output.response.data[0].subtotal));
+		        			$('.jumlah').text(convertToRupiah(output.response.data[0].total));
+		        			$('.vat').text(convertToRupiah(output.response.data[0].ppn));
 		        			$('.ttd_person').text(output.response.data[0].ttd);
 
 		        			if(parseInt(output.response.data[0].ongkoskir) > 0 ){
 		        				$('.line_cost').show();
 		        				$('.label_cost').show();
 		        				$('.cost').show();
-		        				$('.cost').text(Rupiah(output.response.data[0].ongkoskir));
+		        				$('.cost').text(convertToRupiah(output.response.data[0].ongkoskir));
 		        			} else {
 		        				$('.line_cost').hide();
 		        				$('.label_cost').hide();
@@ -539,7 +530,7 @@ $(document).ready(function(){
 								}
 
 		        				$('.tbody').append(
-		        					'<tr><td class="text-center">'+no+'</td><td>'+output.response.data[0].items[x].item+'</td><td class="text-center">'+output.response.data[0].items[x].no_so+'</td><td class="text-center">'+output.response.data[0].items[x].send_qty+'</td><td class="text-center">'+output.response.data[0].items[x].unit+'</td><td class="text-center">'+Rupiah(parseFloat(output.response.data[0].items[x].price))+'</td><td class="text-right">'+Rupiah(parseInt(output.response.data[0].items[x].send_qty) * parseFloat(output.response.data[0].items[x].price))+'</td></tr>'
+		        					'<tr><td class="text-center">'+no+'</td><td>'+output.response.data[0].items[x].item+'</td><td class="text-center">'+output.response.data[0].items[x].no_so+'</td><td class="text-center">'+output.response.data[0].items[x].send_qty+'</td><td class="text-center">'+output.response.data[0].items[x].unit+'</td><td class="text-center">'+convertToRupiah(parseFloat(output.response.data[0].items[x].price))+'</td><td class="text-right">'+convertToRupiah(parseInt(output.response.data[0].items[x].send_qty) * parseFloat(output.response.data[0].items[x].price))+'</td></tr>'
 		        				);
 		        			}
 
@@ -566,7 +557,6 @@ $(document).ready(function(){
 			});
 	    }
   	});
-	
 
   	/////////////////////////////////////////
   	// Complete invoice
@@ -580,7 +570,7 @@ $(document).ready(function(){
 		$('#InvoiceModal').hide();
 	}
 
-	$(document).on('click', '.function_complete a', function(e){
+	$(document).on('click', '.function_complete', function(e){
 	    e.preventDefault();
 	    var id = $(this).data('id');
 	    var name = $(this).data('name');
@@ -596,34 +586,46 @@ $(document).ready(function(){
 	    if ($('#form_inputINV').valid() == true){
 	    	hide_invoice();
 	    	show_loading_message();
+			var jsonData = {};
 	    	var id = $(this).data('id');
-	    	var data = $('#form_inputINV').serialize();
-	  		var request = $.ajax({
-	        	url: pathFile+"?"+Act+"=complete&id="+id,
-	        	cache: false,
-	        	type: 'POST',
-	        	data: data,
-	      	});
+	    	var form_data 	= $('#form_inputINV').serializeArray();
+			$.each(form_data, function(){
+				if(this.name == 'ket') {
+					jsonData.note = this.value;
+				} else {
+					jsonData[this.name] = this.value;
+				}
+			});
+
+			jsonData.id = id.toString();
+
+			var request   = $.ajax({
+				url:          pathFile+"/invoice/paid",
+				type:         'POST',
+				data:         JSON.stringify(jsonData),
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
+     		});
 	      	
 	      	request.done(function(output){
-	      		var obj = JSON.parse(output);
-	        	if (obj.result == sukses){
+				if(output.status == "success"){
 	          		tablenya.ajax.reload(function(){
-	          			tablePrint.ajax.reload();
 	            		hide_loading_message();
-	            		show_message("Berhasil diproses.", 'success');
+	            		show_message("Successfully.", 'success');
 	            		$('#date').val('');
 	            		$('#ket').val('');
 	          		}, true);
 	        	} else {
 	          		hide_loading_message();
-	          		show_message('Gagal memproses', 'error');
+	          		show_message('Failed: '+output.response.message, 'error');
 	       		}
 	      	});
 	      	
 	      	request.fail(function(jqXHR, textStatus){
 	        	hide_loading_message();
-	        	show_message('Gagal memproses: '+textStatus, 'error');
+	        	show_message('Failed: '+textStatus, 'error');
 	      	});
 	    }
   	});
@@ -631,35 +633,37 @@ $(document).ready(function(){
   	////////////////////////////////////////
   	// Delete invoice button
   	//////////////////////////////////////
-  	$(document).on('click', '.HapusInvoice a', function(e){
+
+  	$(document).on('click', '.function_delete', function(e){
 	    e.preventDefault();
 	    var Infos = $(this).data('name');
 	    if (confirm("Anda yakin ingin menghapus '"+Infos+"'?")){
 	    	show_loading_message();
 	      	var id      = $(this).data('id');
 	      	var request = $.ajax({
-	        	url:          pathFile+"?"+Act+"=del_"+sLug+"&id="+id,
-	        	cache:        false,
-	        	dataType:     'json',
-	        	contentType:  'application/json; charset=utf-8',
-	        	type:         'get'
-	      	});
+				url:          pathFile+"/invoice/"+id,
+				type:         'DELETE',
+				beforeSend: function (xhr) {
+					xhr.setRequestHeader('Authorization', getCookie('access_token'));
+					xhr.setRequestHeader('Content-Type', 'application/json');
+				}
+			});
 	      	
 	      	request.done(function(output){
-	        	if (output.result == sukses){
-	          		tablenya.ajax.reload(function(){
+	        	if(output.status == "success"){
+					tablenya.ajax.reload(function(){
 	            		hide_loading_message();
 	            		show_message("'"+Infos+"' berhasil dihapus.", 'success');
 	          		}, true);
 	        	} else {
 	          		hide_loading_message();
-	          		show_message('Gagal menghapus', 'error');
+	          		show_message('Failed: '+output.response.message, 'error');
 	       		}
 	      	});
 	      	
 	      	request.fail(function(jqXHR, textStatus){
 	        	hide_loading_message();
-	        	show_message('Gagal menghapus: '+textStatus, 'error');
+	        	show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	      	});
 	      }
   	});

@@ -18,7 +18,7 @@ $(document).ready(function(){
 	/////////////////////////
 
 	var idTablenya = $('#tablenya');
-	var pathFile = 'http://localhost:8082/api/v1/dashboard';
+	var pathFile = decodeURIComponent(getCookie('base_url_api')) +':'+ getCookie('base_port_api') + decodeURIComponent(getCookie('base_path_api')) + decodeURIComponent(getCookie('base_dashboard_api'));
 	var FormsLug = 'USER';
 	var IDForm = "#form_inputUSER";
 	var addButton = "#add_inputUSER";
@@ -205,7 +205,7 @@ $(document).ready(function(){
 	          		tablenya.api().ajax.reload(function(){
 	            		hide_loading_message();
 	            		var Infos = $('#name').val();
-	            		show_message("'"+Infos+"' added successfully.", 'success');
+	            		show_message("'"+Infos+"' create successfully.", 'success');
 	          		}, true);
 	        	} else {
 	        		hide_loading_message();
