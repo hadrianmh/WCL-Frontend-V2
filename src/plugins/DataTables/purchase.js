@@ -718,7 +718,6 @@ $(document).ready(function(){
 							value = item.value;
 						}
 						
-						var value = (fieldName === 'qty')? parseInt(item.value): item.value;
 						dataGroups[index][fieldName] = value;
 						arr.push(matches[1]);
 					}
