@@ -188,7 +188,7 @@ $(document).ready(function(){
 			"error": function (xhr, error, thrown) {
 				console.error('Error fetching data:', xhr, error, thrown);
 				alert('Terjadi kesalahan, silahkan login kembali.');
-				window.location.href = '/auth/signout.php';
+				//window.location.href = '/auth/signout.php';
 			}
 		},
 	    'columnDefs': [

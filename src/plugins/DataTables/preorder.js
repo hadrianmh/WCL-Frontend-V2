@@ -862,7 +862,7 @@ $(document).ready(function(){
 					arr.push(matches[1]);
 				}
 			} else {
-				var value = (item.name === 'fkid' || item.name === 'poid')? parseInt(item.value) : item.value; 
+				var value = (item.name === 'customerid' || item.name === 'tax' || item.name === 'order_grade')? parseInt(item.value) : item.value; 
 				formDataObject[item.name] = value;
 			}
 		});
@@ -872,7 +872,7 @@ $(document).ready(function(){
 		}
 
 		var request   = $.ajax({
-			url:          pathFile+"/sales-order",
+			url:          pathFile+"/sales-order/add-item",
 			type:         'POST',
 			data:         JSON.stringify(formDataObject, null, 2),
 			beforeSend: function (xhr) {
