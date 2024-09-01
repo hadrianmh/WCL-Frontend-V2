@@ -33,6 +33,11 @@ $(document).ready(function(){
 			$('.dataTables_filter').append($searchButton, $resetButton);
 		},
 		"serverSide" : true,
+		"scrollX": false,
+		"searching": false,
+		"paging":   false,
+        "ordering": false,
+        "info":     false,
 	    "ajax": {
 			"url" : pathFile+"/metrics/so-tracking",
 			"type": "GET",
