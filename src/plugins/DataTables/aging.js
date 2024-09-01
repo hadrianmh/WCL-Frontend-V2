@@ -6,6 +6,7 @@ $(document).ready(function(){
 
 	var idTablenya = $('#tablenya');
 	var pathFile = '../auth/aging.php';
+	var pathFileAPI = decodeURIComponent(getCookie('base_url_api')) +':'+ getCookie('base_port_api') + decodeURIComponent(getCookie('base_path_api')) + decodeURIComponent(getCookie('base_dashboard_api'));
 	var Act = 'action';
 	var sLug = 'aging';
 	var FormsLug = 'AGING';
@@ -48,23 +49,32 @@ $(document).ready(function(){
 	/////////////////////////////////////////////////////////////////
 
 	var req = $.ajax({
-		url: pathFile+"?"+Act+"=sortdata_"+sLug,
-		cache: false,
-		dataType: 'json',
-		contentType: 'application/json; charset=utf-8',
-		type: 'get'
+		url: pathFileAPI+"/sortdata/archive?data=invoice_date&from=invoice",
+		type: "GET",
+		beforeSend: function (xhr) {
+			xhr.setRequestHeader('Authorization', getCookie('access_token'));
+			xhr.setRequestHeader('Content-Type', 'application/json');
+		}
 	});
 
 	req.done(function(output){
-		if(output.result == sukses){
-			for(var i = 0; i<output.data.length; i++){
-				$("#sortby").append("<option value='"+output.data[i].montly+"' "+(getCookie("selectMonth") == output.data[i].montly ? 'selected' : '')+" >"+output.data[i].montly+"</option>");
+		if(output.status == "success"){
+			for(var i=0; i<output.response.data[0].year.length; i++) {
+				$("#sortby").append("<option value='"+output.response.data[0].year[i]+"' data-name='year' "+(getCookie("startdate") == output.response.data[0].year[i] ? 'selected' : '')+" >Tahun: "+output.response.data[0].year[i]+"</option>");
+			}
+			
+			for(var i = 0; i<output.response.data[0].month.length; i++){
+				$("#sortby").append("<option value='"+output.response.data[0].month[i]+"' data-name='month' "+(getCookie("startdate") == output.response.data[0].month[i] ? 'selected' : '')+" >Bulan: "+output.response.data[0].month[i]+"</option>");
 			}
 			setCookie("selectMonth", arsip, 1);
 
 		} else {
-	        show_message('Gagal memuat data', 'error');
+	        show_message('Failed: sort data fetching.', 'error');
 		}
+	});
+
+	req.fail(function(jqXHR, textStatus){
+		show_message('Failed: '+jqXHR.responseJSON.response.message, 'error');
 	});
 
 	$(document).on('change', '#sortby', function(){
