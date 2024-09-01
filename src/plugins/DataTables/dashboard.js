@@ -32,19 +32,24 @@ $(document).ready(function(){
 			$resetButton = $(`<a class="btn btn-default"><i class="fa fa-times"></i></a>`).click(function() { input.val('');$searchButton.click(); }); 
 			$('.dataTables_filter').append($searchButton, $resetButton);
 		},
-		"scrollX": false,
 		"serverSide" : true,
-		"searching": false,
-		"paging":   false,
-        "ordering": false,
-        "info":     false,
 	    "ajax": {
 			"url" : pathFile+"/metrics/so-tracking",
 			"type": "GET",
-			data: {
-				report : getCookie("report"),
-				startdate: getCookie("startdate"),
-				enddate: getCookie("enddate")
+			data: function(d) {
+				d.columns.forEach(function (column) {
+					delete column.searchable;
+					delete column.orderable;
+					delete column.name;
+					if (column.search) {
+						if (column.search.value === '') delete column.search.value;
+						if (column.search.regex === false) delete column.search.regex;
+					}
+				});
+
+				d.report= getCookie("report");
+				d.startdate= getCookie("startdate");
+				d.enddate= getCookie("enddate");
 			},
 			"dataFilter": function(data) {
 				var obj = JSON.parse(data);
