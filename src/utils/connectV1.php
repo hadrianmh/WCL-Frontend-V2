@@ -14,8 +14,6 @@ if (file_exists($configfile)) {
         $dbase = $ENV['database_name'];
         $connect = new mysqli($host,$user,$pass,$dbase);
 
-        // print_r($connect);
-
         if($connect->connect_error){
             echo 'Connection failed: server offline';
             exit();

@@ -4,7 +4,7 @@
 // Personal config DataTables 
 ////////////////////////////
 require '../dashboard/session.php';
-require 'connect.php';
+require '../utils/connectV1.php';
 $tabel = 'user';
 $Query = 'action';
 $slug = 'profile';

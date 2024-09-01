@@ -177,7 +177,7 @@ $(document).ready(function(){
 	      {"data" : "qty_bahan_baku"},
 	      {"data" : "sources"},
 	      {"data": "orderstatus"},
-	      {"data": "input_by"},
+	      {"data": "username"},
 	    ],
 	    "lengthMenu": [[10, -1], [10, "All"]],
 	    iDisplayLength: 10,
