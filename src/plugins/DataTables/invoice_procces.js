@@ -203,10 +203,10 @@ $(document).ready(function(){
             	return intVal(a) + intVal(b);
             }, 0 );
 
-            $( api.column( 10 ).footer() ).html(convertToconvertToRupiah(Bills));
-            $( api.column( 11 ).footer() ).html(convertToconvertToRupiah(Ppns));
-            $( api.column( 12 ).footer() ).html(convertToconvertToRupiah(Totals));
-            $( api.column( 13 ).footer() ).html(convertToconvertToRupiah(Ship_cost));
+            $( api.column( 10 ).footer() ).html(convertToRupiah(Bills));
+            $( api.column( 11 ).footer() ).html(convertToRupiah(Ppns));
+            $( api.column( 12 ).footer() ).html(convertToRupiah(Totals));
+            $( api.column( 13 ).footer() ).html(convertToRupiah(Ship_cost));
         }
 	});
 
@@ -264,7 +264,7 @@ $(document).ready(function(){
 		$('#PrintModal').hide();
 	}
 
-	function convertToconvertToRupiah(angka){
+	function convertToRupiah(angka){
 		let formatted = new Intl.NumberFormat('id-ID', {
 			style: 'currency',
 			currency: 'IDR',

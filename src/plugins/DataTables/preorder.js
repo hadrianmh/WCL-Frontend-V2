@@ -301,6 +301,19 @@ $(document).ready(function(){
         }
 	});
 
+	var buttons = new $.fn.dataTable.Buttons(tablenya, {
+		buttons:[
+        {
+        	extend: 'excelHtml5',
+        	messageTop: false,
+        	footer: true,
+        	text: 'Export to Excel',
+        	filename : 'SalesOrder-'+(getCookie("report") == "month" || getCookie("report") == "year" ? getCookie("report") + "_" + getCookie("startdate") : getCookie("startdate") +"_"+ getCookie("enddate")),
+        	title: 'SALES ORDER '+(getCookie("report") == "month" || getCookie("report") == "year" ? getCookie("report") + "_" + getCookie("startdate") : getCookie("startdate") +"_"+ getCookie("enddate")),
+        }
+		]
+	}).container().appendTo($('.dt-buttons'));
+
 	//////////////////////////////////////////////////////////////
 	// On page load: form validation
 	/////////////////////////////////////////////////////////////

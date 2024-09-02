@@ -277,7 +277,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group phone">
                   <label for="phone">Telp: <span class="required">*</span></label>
-                  <input type="number" class="form-control" name="phone" id="phone" required>
+                  <input type="text" class="form-control" name="phone" id="phone" required>
                 </div>
 
                 <div class="form-group logo margin-bottom-lg">
@@ -4260,7 +4260,7 @@ if(!empty($_GET["page"]) AND htmlspecialchars($_GET["page"]) == "dashboard"){ ?>
 
                 <div class="form-group">
                   <label for="ttd">Nama: <span class="required">*</span></label>
-                  <input type="text" class="form-control" name="ttd" id="ttd" value="<?php echo $_SESSION['name'];?>" required readonly>
+                  <input type="text" class="form-control" name="ttd" id="ttd" value="" required readonly>
                 </div>
 
                 <div class="button_container" style="text-align: center">

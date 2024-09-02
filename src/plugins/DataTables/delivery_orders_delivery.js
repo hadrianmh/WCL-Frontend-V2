@@ -378,6 +378,7 @@ $(document).ready(function(){
 	        	$('#custom').val(output.response.data[0].customer);
 	        	$('#shipto').val(output.response.data[0].shipto);
 				$('#telp').val(output.response.data[0].telp);
+				$('#ttd').val(output.response.data[0].ttd);
 	        	var no = 0;
 	        	for(var i = 0; i<output.response.data.length; i++){
 	        		no++;
