@@ -1451,7 +1451,7 @@ $(document).ready(function(){
 				jsonData[this.name] = value;
 			});
 			
-			jsonData.poid = parseInt(id);
+			jsonData.poid = id;
 
 			var request   = $.ajax({
 				url:          pathFile+"/sales-order/customer",
